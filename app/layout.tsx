@@ -9,6 +9,7 @@ const outfit = Outfit({ subsets: ['latin', 'latin-ext'], variable: '--font-body'
 export const metadata: Metadata = {
   title: 'Exclusive Access | Artist Token Gate',
   description: 'Эксклюзивный контент для держателей токенов артиста',
+  robots: 'noindex, nofollow',
 }
 
 export default function RootLayout({
