@@ -4,7 +4,7 @@ import './globals.css'
 import { Providers } from './providers'
 
 const instrumentSerif = Instrument_Serif({ weight: '400', subsets: ['latin'], variable: '--font-display' })
-const outfit = Outfit({ subsets: ['latin', 'cyrillic'], variable: '--font-body' })
+const outfit = Outfit({ subsets: ['latin', 'latin-ext'], variable: '--font-body' })
 
 export const metadata: Metadata = {
   title: 'Exclusive Access | Artist Token Gate',
