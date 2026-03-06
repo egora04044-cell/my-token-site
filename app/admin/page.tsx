@@ -27,6 +27,8 @@ export default function AdminPage() {
   const { publicKey, connected } = useWallet();
   const [addresses, setAddresses] = useState<ConnectedAddress[]>([]);
   const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [blocked, setBlocked] = useState<string[]>([]);
+  const [blockInput, setBlockInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,19 +42,56 @@ export default function AdminPage() {
     setLoading(true);
     setError(null);
     try {
-      const [addrRes, filesRes] = await Promise.all([
+      const [addrRes, filesRes, blockedRes] = await Promise.all([
         fetch('/api/addresses', { headers: headers(adminAddress) }),
         fetch('/api/files', { headers: headers(adminAddress) }),
+        fetch('/api/blocked', { headers: headers(adminAddress) }),
       ]);
       if (!addrRes.ok) throw new Error(addrRes.status === 403 ? 'Нет прав администратора' : 'Ошибка загрузки адресов');
       if (!filesRes.ok) throw new Error('Ошибка загрузки файлов');
       const [addrData, filesData] = await Promise.all([addrRes.json(), filesRes.json()]);
       setAddresses(addrData);
       setFiles(filesData);
+      setBlocked(blockedRes.ok ? await blockedRes.json() : []);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBlockAddress = async (addrOverride?: string) => {
+    const addr = (addrOverride ?? blockInput).trim();
+    if (!addr || !adminAddress) return;
+    setError(null);
+    try {
+      const res = await fetch('/api/blocked', {
+        method: 'POST',
+        headers: { ...headers(adminAddress), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: addr }),
+      });
+      if (!res.ok) throw new Error('Ошибка блокировки');
+      const list = await res.json();
+      setBlocked(list);
+      if (!addrOverride) setBlockInput('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Ошибка');
+    }
+  };
+
+  const handleUnblockAddress = async (address: string) => {
+    if (!adminAddress) return;
+    setError(null);
+    try {
+      const res = await fetch(`/api/blocked?address=${encodeURIComponent(address)}`, {
+        method: 'DELETE',
+        headers: headers(adminAddress),
+      });
+      if (!res.ok) throw new Error('Ошибка разблокировки');
+      const list = await res.json();
+      setBlocked(list);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Ошибка');
     }
   };
 
@@ -62,6 +101,7 @@ export default function AdminPage() {
     } else {
       setAddresses([]);
       setFiles([]);
+      setBlocked([]);
       setLoading(false);
     }
   }, [connected, adminAddress]);
@@ -250,6 +290,52 @@ export default function AdminPage() {
               )}
             </section>
 
+            {/* Заблокированные кошельки */}
+            <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6">
+              <h2 className="text-xl font-semibold mb-4">Заблокированные кошельки ({blocked.length})</h2>
+              <p className="text-sm text-[var(--text-muted)] mb-4">
+                Заблокированные адреса не могут получить доступ к контенту, даже при наличии токенов.
+              </p>
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="text"
+                  value={blockInput}
+                  onChange={(e) => setBlockInput(e.target.value)}
+                  placeholder="Адрес кошелька для блокировки"
+                  className="flex-1 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm font-mono"
+                />
+                <button
+                  onClick={handleBlockAddress}
+                  disabled={!blockInput.trim()}
+                  className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg font-medium hover:bg-red-500/30 disabled:opacity-50"
+                >
+                  Заблокировать
+                </button>
+              </div>
+              {blocked.length === 0 ? (
+                <p className="text-[var(--text-muted)] text-sm">Нет заблокированных адресов</p>
+              ) : (
+                <ul className="space-y-2">
+                  {blocked.map((addr) => (
+                    <li
+                      key={addr}
+                      className="flex items-center justify-between py-2 border-b border-[var(--border)] last:border-0"
+                    >
+                      <code className="text-sm text-[var(--text-secondary)] font-mono">
+                        {addr}
+                      </code>
+                      <button
+                        onClick={() => handleUnblockAddress(addr)}
+                        className="text-sm text-emerald-400 hover:text-emerald-300"
+                      >
+                        Разблокировать
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
             {/* Подключённые адреса */}
             <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6">
               <h2 className="text-xl font-semibold mb-4">Подключённые адреса Phantom ({addresses.length})</h2>
@@ -262,14 +348,22 @@ export default function AdminPage() {
                   {addresses.map((a) => (
                     <li
                       key={a.address}
-                      className="flex items-center justify-between py-2 border-b border-[var(--border)] last:border-0"
+                      className="flex items-center justify-between py-2 border-b border-[var(--border)] last:border-0 gap-2"
                     >
-                      <code className="text-sm text-[var(--text-secondary)] font-mono">
+                      <code className="text-sm text-[var(--text-secondary)] font-mono truncate flex-1">
                         {a.address}
                       </code>
-                      <span className="text-xs text-[var(--text-muted)]">
+                      <span className="text-xs text-[var(--text-muted)] flex-shrink-0">
                         {new Date(a.connectedAt).toLocaleString('ru')}
                       </span>
+                      {!blocked.includes(a.address) && (
+                        <button
+                          onClick={() => handleBlockAddress(a.address)}
+                          className="text-xs text-red-400 hover:text-red-300 flex-shrink-0"
+                        >
+                          Заблокировать
+                        </button>
+                      )}
                     </li>
                   ))}
                 </ul>

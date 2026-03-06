@@ -8,6 +8,8 @@ import { useState, useEffect } from 'react';
 import { isAdmin } from '@/lib/admin';
 import AudioPlayer from './AudioPlayer';
 
+const PHANTOM_BROWSE_URL = 'https://phantom.app/ul/browse/';
+
 const REQUIRED_TOKEN_MINT = new PublicKey("9AB5cgUf1r1iUU2MfYyzm3YujXpdyS1JQVqRSkxbpump");
 const REQUIRED_AMOUNT = 1000;
 
@@ -27,11 +29,27 @@ export default function TokenGatedContent() {
     const [hasAccess, setHasAccess] = useState(false);
     const [loading, setLoading] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+    const [isBlocked, setIsBlocked] = useState(false);
 
     const checkTokenBalance = async () => {
         if (!publicKey) return;
         setLoading(true);
+        setIsBlocked(false);
         try {
+            const blockedRes = await fetch('/api/check-blocked', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ address: publicKey.toString() }),
+            });
+            const blockedData = await blockedRes.json();
+            if (blockedData.blocked) {
+                setTokenBalance(0);
+                setHasAccess(false);
+                setIsBlocked(true);
+                setLoading(false);
+                return;
+            }
+
             const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
                 publicKey,
                 { mint: REQUIRED_TOKEN_MINT }
@@ -64,6 +82,7 @@ export default function TokenGatedContent() {
         } else {
             setTokenBalance(null);
             setHasAccess(false);
+            setIsBlocked(false);
         }
     }, [connected, publicKey]);
 
@@ -83,11 +102,25 @@ export default function TokenGatedContent() {
     const [playingId, setPlayingId] = useState<string | null>(null);
     const [volume, setVolume] = useState(1);
     const [isMuted, setIsMuted] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+    const [openInPhantomUrl, setOpenInPhantomUrl] = useState('');
+
+    useEffect(() => {
+        const check = () => {
+            const ua = navigator.userAgent;
+            const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) || window.innerWidth < 768;
+            setIsMobile(mobile);
+            setOpenInPhantomUrl(`${PHANTOM_BROWSE_URL}${encodeURIComponent(window.location.href)}`);
+        };
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
 
     return (
         <div className="min-h-screen relative">
             {/* Gate Screen — не подключен, проверка или недостаточно токенов */}
-            {(!connected || loading || !hasAccess) && (
+            {(!connected || loading || !hasAccess || isBlocked) && (
                 <main className="min-h-screen flex flex-col items-center justify-between px-6 py-8 pb-12 relative">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[radial-gradient(ellipse,rgba(167,139,250,0.25)_0%,transparent_70%)] opacity-40 pointer-events-none" />
                     
@@ -121,12 +154,33 @@ export default function TokenGatedContent() {
                             {!connected ? (
                                 <div className="flex flex-col items-center gap-4">
                                     <WalletMultiButton className="!flex !items-center !justify-center !gap-3 !w-full !max-w-[320px] !rounded-xl" />
-                                    <p className="text-sm text-[var(--text-muted)]">Безопасное подключение через Phantom Wallet</p>
+                                    {isMobile && openInPhantomUrl && (
+                                        <a
+                                            href={openInPhantomUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center justify-center gap-2 w-full max-w-[320px] px-6 py-3 rounded-xl border border-[var(--accent)]/50 text-[var(--accent)] bg-[var(--accent)]/10 hover:bg-[var(--accent)]/20 transition-colors text-sm font-medium"
+                                        >
+                                            <span>📱</span>
+                                            Открыть в приложении Phantom
+                                        </a>
+                                    )}
+                                    <p className="text-sm text-[var(--text-muted)]">
+                                        {isMobile ? 'Или откройте Phantom → Explore → введите адрес сайта' : 'Безопасное подключение через Phantom Wallet'}
+                                    </p>
                                 </div>
                             ) : loading ? (
                                 <div className="w-full max-w-[400px] mx-auto p-8 bg-[var(--bg-card)] border border-[var(--border)] rounded-[20px] flex flex-col items-center gap-4">
                                     <div className="w-10 h-10 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
                                     <span className="text-[var(--text-secondary)]">Проверка баланса токенов...</span>
+                                </div>
+                            ) : isBlocked ? (
+                                <div className="w-full max-w-[400px] mx-auto p-8 bg-[var(--bg-card)] border border-[var(--border)] rounded-[20px] text-center">
+                                    <div className="w-14 h-14 rounded-full bg-red-500/15 text-[var(--error)] flex items-center justify-center text-2xl font-bold mx-auto mb-3">🚫</div>
+                                    <h3 className="text-xl font-semibold mb-2">Доступ заблокирован</h3>
+                                    <p className="text-[var(--text-secondary)] text-[0.95rem]">
+                                        Этот кошелёк заблокирован администратором.
+                                    </p>
                                 </div>
                             ) : !hasAccess ? (
                                 <div className="w-full max-w-[400px] mx-auto p-8 bg-[var(--bg-card)] border border-[var(--border)] rounded-[20px] text-center">
@@ -155,7 +209,7 @@ export default function TokenGatedContent() {
             )}
 
             {/* Content Screen — доступ разрешён */}
-            {connected && hasAccess && !loading && (
+            {connected && hasAccess && !loading && !isBlocked && (
                 <main className="min-h-screen flex flex-col px-6 py-8">
                     <header className="flex items-center justify-between max-w-[1200px] w-full mx-auto mb-12 pb-6 border-b border-[var(--border)]">
                         <div className="font-serif text-2xl tracking-[0.15em]">ARTIST</div>
@@ -235,7 +289,7 @@ export default function TokenGatedContent() {
                                                         <AudioPlayer
                                                             key={f.id}
                                                             id={f.id}
-                                                            src={f.path}
+                                                            src={`/api/serve?path=${encodeURIComponent(f.path)}`}
                                                             name={f.name}
                                                             playingId={playingId}
                                                             onPlay={setPlayingId}
@@ -255,7 +309,7 @@ export default function TokenGatedContent() {
                                                     .map((f) => (
                                                         <a
                                                             key={f.id}
-                                                            href={f.path}
+                                                            href={`/api/serve?path=${encodeURIComponent(f.path)}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="flex items-center gap-3 p-4 bg-[var(--bg-elevated)] rounded-lg border border-[var(--border)] hover:border-[var(--accent)]/50 transition-colors"
