@@ -40,7 +40,7 @@ body::before {
   inset: 0;
   background:
     radial-gradient(circle at 50% 40%, rgba(167, 139, 250, 0.25), transparent 65%),
-    url("/photo_2026-02-04_03-01-44.jpg") no-repeat center;
+    url("/photo_2026-03-03_10-39-30.jpg?v=2") no-repeat center;
   background-size: min(520px, 70vw), min(420px, 56vw);
   opacity: 0.18;
   mix-blend-mode: screen;
@@ -82,4 +82,29 @@ body::before {
   background: var(--bg-card) !important;
   border: 1px solid var(--border) !important;
   border-radius: 20px !important;
+}
+
+/* Audio player range slider */
+input[type="range"].audio-progress {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: var(--bg-card);
+  border-radius: 3px;
+}
+input[type="range"].audio-progress::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+input[type="range"].audio-progress::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: none;
 }

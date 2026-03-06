@@ -5,6 +5,8 @@ import { useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { PublicKey } from '@solana/web3.js';
 import { useState, useEffect } from 'react';
+import { isAdmin } from '@/lib/admin';
+import AudioPlayer from './AudioPlayer';
 
 const REQUIRED_TOKEN_MINT = new PublicKey("9AB5cgUf1r1iUU2MfYyzm3YujXpdyS1JQVqRSkxbpump");
 const REQUIRED_AMOUNT = 1000;
@@ -77,8 +79,10 @@ export default function TokenGatedContent() {
     }, [hasAccess]);
 
     const shortenAddress = (addr: string) => `${addr.slice(0, 4)}...${addr.slice(-4)}`;
-    const filesByCategory = (cat: UploadedFile['category']) =>
-        uploadedFiles.filter((f) => (f.category ?? 'other') === (cat ?? 'other'));
+    const isAudioFile = (name: string) => /\.(mp3|wav|ogg|m4a|flac)$/i.test(name);
+    const [playingId, setPlayingId] = useState<string | null>(null);
+    const [volume, setVolume] = useState(1);
+    const [isMuted, setIsMuted] = useState(false);
 
     return (
         <div className="min-h-screen relative">
@@ -90,9 +94,11 @@ export default function TokenGatedContent() {
                     <header className="w-full max-w-[600px] flex items-center justify-between z-10">
                         <div className="font-serif text-2xl tracking-[0.15em]">ARTIST</div>
                         <div className="flex items-center gap-3">
-                            <a href="/admin" className="text-xs text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
-                                Админ
-                            </a>
+                            {connected && isAdmin(publicKey?.toString()) && (
+                                <a href="/admin" className="text-xs text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
+                                    Админ
+                                </a>
+                            )}
                             <span className="text-xs font-semibold tracking-[0.2em] px-3 py-1.5 border border-[var(--accent)] rounded-full text-[var(--accent)] bg-[rgba(167,139,250,0.08)]">
                                 EXCLUSIVE
                             </span>
@@ -154,9 +160,11 @@ export default function TokenGatedContent() {
                     <header className="flex items-center justify-between max-w-[1200px] w-full mx-auto mb-12 pb-6 border-b border-[var(--border)]">
                         <div className="font-serif text-2xl tracking-[0.15em]">ARTIST</div>
                         <div className="flex items-center gap-4">
-                            <a href="/admin" className="text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
-                                Админ
-                            </a>
+                            {isAdmin(publicKey?.toString()) && (
+                                <a href="/admin" className="text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
+                                    Админ
+                                </a>
+                            )}
                             <span className="text-sm text-[var(--text-muted)] font-mono">{shortenAddress(publicKey?.toString() || '')}</span>
                             <span className="text-xs font-semibold px-2.5 py-1 bg-emerald-500/15 text-[var(--success)] rounded-full">
                                 {Math.floor(tokenBalance || 0).toLocaleString()}+ токенов
@@ -168,82 +176,104 @@ export default function TokenGatedContent() {
                     <section className="flex-1 max-w-[1200px] w-full mx-auto">
                         <h1 className="font-serif text-[clamp(2rem,4vw,2.75rem)] font-normal mb-2">Добро пожаловать в эксклюзивную зону</h1>
                         <p className="text-[var(--text-secondary)] mb-12">Контент только для держателей токенов</p>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {[
-                                { emoji: '🎵', title: 'Неизданные треки', desc: 'Ранний доступ к новым релизам', category: 'tracks' as const },
-                                { emoji: '🎬', title: 'Эксклюзивные видео', desc: 'За кулисами и бонусные материалы', category: 'videos' as const },
-                                { emoji: '💬', title: 'Закрытое сообщество', desc: 'Прямая связь с артистом', category: 'community' as const },
-                                { emoji: '🎫', title: 'Приоритетные билеты', desc: 'Ранняя продажа на концерты', category: 'tickets' as const },
-                            ].map((card) => {
-                                const catFiles = filesByCategory(card.category);
-                                return (
-                                    <article
-                                        key={card.title}
-                                        className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 text-left min-h-[200px] flex flex-col justify-between gap-3 transition-all duration-300 hover:border-[var(--border-hover)] hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,0,0,0.3)]"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-3xl">{card.emoji}</span>
-                                            <div>
-                                                <h3 className="text-lg font-semibold">{card.title}</h3>
-                                                <p className="text-xs text-[var(--text-secondary)]">{card.desc}</p>
-                                            </div>
-                                        </div>
-                                        <div className="mt-2">
-                                            {catFiles.length === 0 ? (
-                                                <p className="text-xs text-[var(--text-muted)]">
-                                                    Здесь появится контент этой категории после загрузки в админ-панели.
-                                                </p>
-                                            ) : (
-                                                <ul className="space-y-1">
-                                                    {catFiles.slice(0, 3).map((f) => (
-                                                        <li key={f.id}>
-                                                            <a
-                                                                href={f.path}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="text-xs text-[var(--accent-bright)] hover:underline truncate block"
-                                                            >
-                                                                {f.name}
-                                                            </a>
-                                                        </li>
-                                                    ))}
-                                                    {catFiles.length > 3 && (
-                                                        <li className="text-[0.7rem] text-[var(--text-muted)]">
-                                                            + ещё {catFiles.length - 3}
-                                                        </li>
-                                                    )}
-                                                </ul>
-                                            )}
-                                        </div>
-                                    </article>
-                                );
-                            })}
-                        </div>
 
-                        <div className="mt-12 p-8 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl">
-                            <h2 className="text-2xl font-semibold mb-4">🌟 Эксклюзивный контент</h2>
+                        <div className="p-8 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl">
+                            <h2 className="text-2xl font-semibold mb-4"><span className="opacity-60">🌟</span> Эксклюзивный контент</h2>
                             {uploadedFiles.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {uploadedFiles.map((f) => (
-                                        <a
-                                            key={f.id}
-                                            href={f.path}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-3 p-4 bg-[var(--bg-elevated)] rounded-lg border border-[var(--border)] hover:border-[var(--accent)]/50 transition-colors"
-                                        >
-                                            <span className="text-2xl">
-                                                {f.name.match(/\.(mp4|webm|mov)$/i) ? '🎬' : f.name.match(/\.(mp3|wav|ogg)$/i) ? '🎵' : f.name.match(/\.(jpg|png|gif|webp)$/i) ? '🖼️' : '📄'}
-                                            </span>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-sm font-medium truncate">{f.name}</p>
-                                                <p className="text-xs text-[var(--text-muted)]">
-                                                    {(f.size / 1024).toFixed(1)} KB
-                                                </p>
+                                <div className="space-y-6">
+                                    {uploadedFiles.filter((f) => isAudioFile(f.name)).length > 0 && (
+                                        <div>
+                                            <div className="flex items-center justify-between gap-4 mb-3">
+                                                <h3 className="text-lg font-semibold text-[var(--foreground)]">Треки</h3>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (isMuted) {
+                                                                if (volume === 0) setVolume(0.5);
+                                                                setIsMuted(false);
+                                                            } else {
+                                                                setIsMuted(true);
+                                                            }
+                                                        }}
+                                                        className="p-1.5 text-[var(--text-muted)] opacity-70 hover:opacity-100 hover:text-[var(--foreground)] transition-colors rounded-lg hover:bg-[var(--bg-elevated)]"
+                                                        aria-label={isMuted ? 'Включить звук' : 'Выключить звук'}
+                                                    >
+                                                        {isMuted || volume === 0 ? (
+                                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+                                                            </svg>
+                                                        ) : volume < 0.5 ? (
+                                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z" />
+                                                            </svg>
+                                                        ) : (
+                                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+                                                            </svg>
+                                                        )}
+                                                    </button>
+                                                    <input
+                                                        type="range"
+                                                        min={0}
+                                                        max={1}
+                                                        step={0.01}
+                                                        value={volume}
+                                                        onChange={(e) => {
+                                                            const v = parseFloat(e.target.value);
+                                                            setVolume(v);
+                                                            setIsMuted(v === 0);
+                                                        }}
+                                                        className="audio-progress cursor-pointer w-28"
+                                                    />
+                                                </div>
                                             </div>
-                                        </a>
-                                    ))}
+                                            <div className="grid grid-cols-1 gap-3">
+                                                {uploadedFiles
+                                                    .filter((f) => isAudioFile(f.name))
+                                                    .map((f) => (
+                                                        <AudioPlayer
+                                                            key={f.id}
+                                                            id={f.id}
+                                                            src={f.path}
+                                                            name={f.name}
+                                                            playingId={playingId}
+                                                            onPlay={setPlayingId}
+                                                            volume={volume}
+                                                            isMuted={isMuted}
+                                                        />
+                                                    ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {uploadedFiles.filter((f) => !isAudioFile(f.name)).length > 0 && (
+                                        <div>
+                                            <h3 className="text-lg font-semibold mb-3 text-[var(--foreground)]">Другие файлы</h3>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                {uploadedFiles
+                                                    .filter((f) => !isAudioFile(f.name))
+                                                    .map((f) => (
+                                                        <a
+                                                            key={f.id}
+                                                            href={f.path}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex items-center gap-3 p-4 bg-[var(--bg-elevated)] rounded-lg border border-[var(--border)] hover:border-[var(--accent)]/50 transition-colors"
+                                                        >
+                                                            <span className="text-2xl">
+                                                                {f.name.match(/\.(mp4|webm|mov)$/i) ? '🎬' : f.name.match(/\.(jpg|png|gif|webp)$/i) ? '🖼️' : '📄'}
+                                                            </span>
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="text-sm font-medium truncate">{f.name}</p>
+                                                                <p className="text-xs text-[var(--text-muted)]">
+                                                                    {(f.size / 1024).toFixed(1)} KB
+                                                                </p>
+                                                            </div>
+                                                        </a>
+                                                    ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <p className="text-[var(--text-secondary)]">
