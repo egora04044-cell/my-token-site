@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { IBM_Plex_Serif, IBM_Plex_Sans } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
+import { PhantomMobileProvider } from '@/lib/phantom-mobile'
 
 const ibmPlexSerif = IBM_Plex_Serif({ weight: '400', subsets: ['latin'], variable: '--font-display' })
 const ibmPlexSans = IBM_Plex_Sans({ weight: ['400', '500', '600'], subsets: ['latin'], variable: '--font-body' })
@@ -22,7 +23,9 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <div className="noise-overlay" />
         <Providers>
-          {children}
+          <PhantomMobileProvider>
+            {children}
+          </PhantomMobileProvider>
         </Providers>
       </body>
     </html>

@@ -6,9 +6,9 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { PublicKey } from '@solana/web3.js';
 import { useState, useEffect } from 'react';
 import { isAdmin } from '@/lib/admin';
+import { usePhantomMobile } from '@/lib/phantom-mobile';
 import AudioPlayer from './AudioPlayer';
-
-const PHANTOM_BROWSE_URL = 'https://phantom.app/ul/browse/';
+import GlassBlock from './GlassBlock';
 
 const REQUIRED_TOKEN_MINT = new PublicKey("9AB5cgUf1r1iUU2MfYyzm3YujXpdyS1JQVqRSkxbpump");
 const REQUIRED_AMOUNT = 1000;
@@ -23,8 +23,13 @@ interface UploadedFile {
 }
 
 export default function TokenGatedContent() {
-    const { publicKey, connected } = useWallet();
+    const { publicKey: adapterPublicKey, connected: adapterConnected } = useWallet();
     const { connection } = useConnection();
+    const { connected: phantomConnected, publicKey: phantomPublicKey, connectPhantom, disconnect: phantomDisconnect, hasDeeplinkSupport } = usePhantomMobile();
+
+    const usePhantomMobileConnection = hasDeeplinkSupport && phantomConnected;
+    const publicKey = usePhantomMobileConnection ? phantomPublicKey : adapterPublicKey;
+    const connected = usePhantomMobileConnection || adapterConnected;
     const [tokenBalance, setTokenBalance] = useState<number | null>(null);
     const [hasAccess, setHasAccess] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -103,14 +108,11 @@ export default function TokenGatedContent() {
     const [volume, setVolume] = useState(1);
     const [isMuted, setIsMuted] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
-    const [openInPhantomUrl, setOpenInPhantomUrl] = useState('');
-
     useEffect(() => {
         const check = () => {
             const ua = navigator.userAgent;
             const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) || window.innerWidth < 768;
             setIsMobile(mobile);
-            setOpenInPhantomUrl(`${PHANTOM_BROWSE_URL}${encodeURIComponent(window.location.href)}`);
         };
         check();
         window.addEventListener('resize', check);
@@ -153,21 +155,39 @@ export default function TokenGatedContent() {
                         <div className="w-full mb-8">
                             {!connected ? (
                                 <div className="flex flex-col items-center gap-4">
-                                    <WalletMultiButton className="!flex !items-center !justify-center !gap-3 !w-full !max-w-[320px] !rounded-xl" />
-                                    {isMobile && openInPhantomUrl && (
-                                        <a
-                                            href={openInPhantomUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center justify-center gap-2 w-full max-w-[320px] px-6 py-3 rounded-xl border border-[var(--accent)]/50 text-[var(--accent)] bg-[var(--accent)]/10 hover:bg-[var(--accent)]/20 transition-colors text-sm font-medium"
-                                        >
-                                            <span>📱</span>
-                                            Открыть в приложении Phantom
-                                        </a>
+                                    {hasDeeplinkSupport ? (
+                                        <>
+                                            <button
+                                                type="button"
+                                                onClick={connectPhantom}
+                                                className="flex items-center justify-center gap-3 w-full max-w-[320px] px-6 py-3.5 bg-[var(--accent)] hover:opacity-90 text-white font-medium rounded-xl transition-opacity"
+                                            >
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="shrink-0">
+                                                    <path d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24Z" fill="url(#phantom-a)" />
+                                                    <path d="M13.5 6H10.5V14.25C10.5 14.6625 10.8375 15 11.25 15H12.75C13.1625 15 13.5 14.6625 13.5 14.25V6Z" fill="white" />
+                                                    <path d="M16.5 6H15V8.25H16.5C16.9125 8.25 17.25 8.5875 17.25 9V6.75C17.25 6.3375 16.9125 6 16.5 6Z" fill="white" />
+                                                    <defs><linearGradient id="phantom-a" x1="12" y1="0" x2="12" y2="24" gradientUnits="userSpaceOnUse"><stop stopColor="#534BB1" /><stop offset="1" stopColor="#551BF9" /></linearGradient></defs>
+                                                </svg>
+                                                Подключить Phantom
+                                            </button>
+                                            <p className="text-sm text-[var(--text-muted)]">
+                                                Откроется приложение Phantom. После подтверждения вы вернётесь в этот браузер.
+                                            </p>
+                                            <div className="w-full max-w-[320px] border-t border-[var(--border)] pt-4">
+                                                <p className="text-xs text-[var(--text-muted)] mb-2">Или через WalletConnect:</p>
+                                                <WalletMultiButton className="!flex !items-center !justify-center !gap-3 !w-full !rounded-xl" />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <WalletMultiButton className="!flex !items-center !justify-center !gap-3 !w-full !max-w-[320px] !rounded-xl" />
+                                            <p className="text-sm text-[var(--text-muted)]">
+                                                {isMobile
+                                                    ? 'На телефоне: выберите WalletConnect → Phantom. Подключение вернётся в браузер.'
+                                                    : 'Безопасное подключение через Phantom Wallet'}
+                                            </p>
+                                        </>
                                     )}
-                                    <p className="text-sm text-[var(--text-muted)]">
-                                        {isMobile ? 'Или откройте Phantom → Explore → введите адрес сайта' : 'Безопасное подключение через Phantom Wallet'}
-                                    </p>
                                 </div>
                             ) : loading ? (
                                 <div className="w-full max-w-[400px] mx-auto p-8 bg-[var(--bg-card)] border border-[var(--border)] rounded-[20px] flex flex-col items-center gap-4">
@@ -191,7 +211,17 @@ export default function TokenGatedContent() {
                                     </p>
                                     <p className="text-sm text-[var(--text-muted)]">Приобретите токены артиста, чтобы получить доступ.</p>
                                     <div className="mt-6">
-                                        <WalletMultiButton className="!rounded-xl" />
+                                        {usePhantomMobileConnection ? (
+                                            <button
+                                                type="button"
+                                                onClick={phantomDisconnect}
+                                                className="px-6 py-2.5 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl hover:border-[var(--accent)]/50 transition-colors"
+                                            >
+                                                Отключить кошелёк
+                                            </button>
+                                        ) : (
+                                            <WalletMultiButton className="!rounded-xl" />
+                                        )}
                                     </div>
                                 </div>
                             ) : null}
@@ -223,7 +253,17 @@ export default function TokenGatedContent() {
                             <span className="text-xs font-semibold px-2.5 py-1 bg-emerald-500/15 text-[var(--success)] rounded-full">
                                 {Math.floor(tokenBalance || 0).toLocaleString()}+ токенов
                             </span>
-                            <WalletMultiButton className="!rounded-lg !py-2 !text-sm" />
+                            {usePhantomMobileConnection ? (
+                                <button
+                                    type="button"
+                                    onClick={phantomDisconnect}
+                                    className="px-4 py-2 text-sm bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg hover:border-[var(--accent)]/50 transition-colors"
+                                >
+                                    Отключить
+                                </button>
+                            ) : (
+                                <WalletMultiButton className="!rounded-lg !py-2 !text-sm" />
+                            )}
                         </div>
                     </header>
 
@@ -231,7 +271,7 @@ export default function TokenGatedContent() {
                         <h1 className="font-serif text-[clamp(2rem,4vw,2.75rem)] font-normal mb-2">Добро пожаловать в эксклюзивную зону</h1>
                         <p className="text-[var(--text-secondary)] mb-12">Контент только для держателей токенов</p>
 
-                        <div className="p-8 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl">
+                        <GlassBlock className="p-8">
                             <h2 className="text-2xl font-semibold mb-4"><span className="opacity-60">🌟</span> Эксклюзивный контент</h2>
                             {uploadedFiles.length > 0 ? (
                                 <div className="space-y-6">
@@ -334,7 +374,7 @@ export default function TokenGatedContent() {
                                     Загруженные файлы появятся здесь. Админ загружает контент в панели управления.
                                 </p>
                             )}
-                        </div>
+                        </GlassBlock>
                     </section>
                 </main>
             )}

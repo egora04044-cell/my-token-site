@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isAdmin } from '@/lib/admin';
+import { isAdmin, ADMIN_ADDRESSES } from '@/lib/admin';
 import {
   getBlockedAddresses,
   addBlockedAddress,
@@ -36,6 +36,12 @@ export async function POST(request: NextRequest) {
     const address = typeof body.address === 'string' ? body.address.trim() : null;
     if (!address || address.length < 32) {
       return NextResponse.json({ error: 'Invalid address' }, { status: 400 });
+    }
+    if (address === adminAddress) {
+      return NextResponse.json({ error: 'Нельзя заблокировать свой кошелёк' }, { status: 400 });
+    }
+    if (ADMIN_ADDRESSES.includes(address)) {
+      return NextResponse.json({ error: 'Нельзя заблокировать админский кошелёк' }, { status: 400 });
     }
     await addBlockedAddress(address);
     const blocked = await getBlockedAddresses();

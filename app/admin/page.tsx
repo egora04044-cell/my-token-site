@@ -3,7 +3,10 @@
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ADMIN_ADDRESSES, isAdmin } from '@/lib/admin';
+import GlassBlock from '@/app/components/GlassBlock';
 
 interface ConnectedAddress {
   address: string;
@@ -24,6 +27,7 @@ const headers = (address: string) => ({
 });
 
 export default function AdminPage() {
+  const router = useRouter();
   const { publicKey, connected } = useWallet();
   const [addresses, setAddresses] = useState<ConnectedAddress[]>([]);
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -60,9 +64,13 @@ export default function AdminPage() {
     }
   };
 
+  const isProtectedAddress = (addr: string) =>
+    addr === adminAddress || ADMIN_ADDRESSES.includes(addr);
+
   const handleBlockAddress = async (addrOverride?: string) => {
     const addr = (addrOverride ?? blockInput).trim();
     if (!addr || !adminAddress) return;
+    if (isProtectedAddress(addr)) return;
     setError(null);
     try {
       const res = await fetch('/api/blocked', {
@@ -70,7 +78,10 @@ export default function AdminPage() {
         headers: { ...headers(adminAddress), 'Content-Type': 'application/json' },
         body: JSON.stringify({ address: addr }),
       });
-      if (!res.ok) throw new Error('Ошибка блокировки');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Ошибка блокировки');
+      }
       const list = await res.json();
       setBlocked(list);
       if (!addrOverride) setBlockInput('');
@@ -97,6 +108,10 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (connected && adminAddress) {
+      if (!isAdmin(adminAddress)) {
+        router.replace('/');
+        return;
+      }
       fetchData();
     } else {
       setAddresses([]);
@@ -104,7 +119,7 @@ export default function AdminPage() {
       setBlocked([]);
       setLoading(false);
     }
-  }, [connected, adminAddress]);
+  }, [connected, adminAddress, router]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -213,7 +228,7 @@ export default function AdminPage() {
         ) : (
           <>
             {/* Загрузка файлов */}
-            <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 space-y-4">
+            <GlassBlock className="p-6 space-y-4">
               <h2 className="text-xl font-semibold">Загрузить файлы</h2>
               <p className="text-sm text-[var(--text-muted)]">
                 Изображения, аудио, видео, PDF (макс. 50 MB)
@@ -251,10 +266,10 @@ export default function AdminPage() {
                   </button>
                 </div>
               </div>
-            </section>
+            </GlassBlock>
 
             {/* Загруженные файлы */}
-            <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6">
+            <GlassBlock className="p-6">
               <h2 className="text-xl font-semibold mb-4">Загруженные файлы ({files.length})</h2>
               {files.length === 0 ? (
                 <p className="text-[var(--text-muted)] text-sm">Нет загруженных файлов</p>
@@ -288,10 +303,10 @@ export default function AdminPage() {
                   ))}
                 </ul>
               )}
-            </section>
+            </GlassBlock>
 
             {/* Заблокированные кошельки */}
-            <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6">
+            <GlassBlock className="p-6">
               <h2 className="text-xl font-semibold mb-4">Заблокированные кошельки ({blocked.length})</h2>
               <p className="text-sm text-[var(--text-muted)] mb-4">
                 Заблокированные адреса не могут получить доступ к контенту, даже при наличии токенов.
@@ -306,12 +321,17 @@ export default function AdminPage() {
                 />
                 <button
                   onClick={handleBlockAddress}
-                  disabled={!blockInput.trim()}
+                  disabled={!blockInput.trim() || isProtectedAddress(blockInput.trim())}
                   className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg font-medium hover:bg-red-500/30 disabled:opacity-50"
                 >
                   Заблокировать
                 </button>
               </div>
+              {blockInput.trim() && isProtectedAddress(blockInput.trim()) && (
+                <p className="text-xs text-amber-400/90">
+                  Нельзя заблокировать свой или админский кошелёк
+                </p>
+              )}
               {blocked.length === 0 ? (
                 <p className="text-[var(--text-muted)] text-sm">Нет заблокированных адресов</p>
               ) : (
@@ -334,10 +354,10 @@ export default function AdminPage() {
                   ))}
                 </ul>
               )}
-            </section>
+            </GlassBlock>
 
             {/* Подключённые адреса */}
-            <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6">
+            <GlassBlock className="p-6">
               <h2 className="text-xl font-semibold mb-4">Подключённые адреса Phantom ({addresses.length})</h2>
               {addresses.length === 0 ? (
                 <p className="text-[var(--text-muted)] text-sm">
@@ -356,7 +376,7 @@ export default function AdminPage() {
                       <span className="text-xs text-[var(--text-muted)] flex-shrink-0">
                         {new Date(a.connectedAt).toLocaleString('ru')}
                       </span>
-                      {!blocked.includes(a.address) && (
+                      {!blocked.includes(a.address) && !isProtectedAddress(a.address) && (
                         <button
                           onClick={() => handleBlockAddress(a.address)}
                           className="text-xs text-red-400 hover:text-red-300 flex-shrink-0"
@@ -368,7 +388,7 @@ export default function AdminPage() {
                   ))}
                 </ul>
               )}
-            </section>
+            </GlassBlock>
           </>
         )}
       </main>

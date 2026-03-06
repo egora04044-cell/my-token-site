@@ -4,9 +4,9 @@
 :root {
   --background: #0a0a0b;
   --foreground: #fafafa;
-  --bg-secondary: #121214;
-  --bg-card: #18181b;
-  --bg-elevated: #1f1f23;
+  --bg-secondary: rgba(18, 18, 20, 0.55);
+  --bg-card: rgba(24, 24, 27, 0.5);
+  --bg-elevated: rgba(31, 31, 35, 0.55);
   --text-secondary: #a1a1aa;
   --text-muted: #71717a;
   --accent: #a78bfa;
@@ -33,6 +33,22 @@ body {
   overflow-x: hidden;
 }
 
+/* Кнопки и ссылки — курсор-палец, эффект нажатия */
+button,
+a[href],
+[role="button"],
+.wallet-adapter-button {
+  cursor: pointer !important;
+}
+button:active,
+a[href]:active,
+[role="button"]:active {
+  transform: scale(0.98);
+}
+.wallet-adapter-button:active {
+  transform: scale(0.98) translateY(0) !important;
+}
+
 /* Artist background logo */
 body::before {
   content: "";
@@ -41,8 +57,8 @@ body::before {
   background:
     radial-gradient(circle at 50% 40%, rgba(167, 139, 250, 0.25), transparent 65%),
     url("/photo_2026-03-03_10-39-30.jpg?v=2") no-repeat center;
-  background-size: min(520px, 70vw), min(420px, 56vw);
-  opacity: 0.18;
+  background-size: min(520px, 70vw), min(680px, 85vw);
+  opacity: 0.22;
   mix-blend-mode: screen;
   pointer-events: none;
   z-index: 0;
