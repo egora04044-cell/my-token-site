@@ -147,13 +147,20 @@ export default function AudioPlayer({ id, path, token, address, name, playingId,
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const isActive = playingId === id;
+
   if (loadError) {
     return (
-      <div className="flex items-center gap-4 p-4 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border)] opacity-60">
-        <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center text-red-400">✕</div>
-        <div className="flex-1">
-          <p className="text-sm font-medium truncate">{name}</p>
-          <p className="text-xs text-[var(--text-muted)]">Ошибка загрузки</p>
+      <div className="flex items-center gap-4 p-4 rounded-xl border border-red-500/20 bg-red-500/5">
+        <div className="w-14 h-14 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
+          <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-medium truncate text-[var(--foreground)]">{name}</p>
+          <p className="text-sm text-red-400/80">Ошибка загрузки</p>
         </div>
       </div>
     );
@@ -161,11 +168,11 @@ export default function AudioPlayer({ id, path, token, address, name, playingId,
 
   if (!blobUrl) {
     return (
-      <div className="flex items-center gap-4 p-4 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border)] opacity-60">
-        <div className="w-12 h-12 rounded-full bg-[var(--border)] animate-pulse" />
-        <div className="flex-1">
-          <p className="text-sm font-medium truncate">{name}</p>
-          <p className="text-xs text-[var(--text-muted)]">Загрузка...</p>
+      <div className="flex items-center gap-4 p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] animate-pulse">
+        <div className="w-14 h-14 rounded-xl bg-[var(--border)] shrink-0" />
+        <div className="min-w-0 flex-1">
+          <p className="font-medium truncate text-[var(--foreground)]">{name}</p>
+          <p className="text-sm text-[var(--text-muted)]">Загрузка...</p>
         </div>
       </div>
     );
@@ -173,44 +180,79 @@ export default function AudioPlayer({ id, path, token, address, name, playingId,
 
   return (
     <div
-      className="flex flex-col gap-3 p-4 bg-[var(--bg-card)] rounded-lg border border-[var(--border)] hover:border-[var(--border-hover)] transition-colors select-none"
+      className={`group flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 select-none ${
+        isActive
+          ? 'border-[var(--foreground)]/20 bg-[var(--bg-elevated)] shadow-lg shadow-[var(--foreground)]/5'
+          : 'border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--border-hover)] hover:bg-[var(--bg-elevated)]'
+      }`}
       onContextMenu={(e) => e.preventDefault()}
     >
       <audio ref={audioRef} src={blobUrl} preload="metadata" />
-      <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={togglePlay}
-          className="flex-shrink-0 w-12 h-12 rounded-full bg-[var(--bg-secondary)] text-[var(--foreground)] flex items-center justify-center hover:bg-[var(--border)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--border-hover)]"
-          aria-label={isPlaying ? 'Пауза' : 'Воспроизвести'}
-        >
-          {isPlaying ? (
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <rect x="6" y="4" width="4" height="16" rx="1" />
-              <rect x="14" y="4" width="4" height="16" rx="1" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          )}
-        </button>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium truncate text-[var(--foreground)]">{name}</p>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs text-[var(--text-muted)] w-9">{formatTime(currentTime)}</span>
+
+      {/* Cover / Artwork */}
+      <button
+        type="button"
+        onClick={togglePlay}
+        className="relative w-14 h-14 rounded-xl shrink-0 overflow-hidden bg-gradient-to-br from-[var(--foreground)]/10 to-[var(--foreground)]/5 flex items-center justify-center transition-transform hover:scale-[1.02] active:scale-[0.98]"
+        aria-label={isPlaying ? 'Пауза' : 'Воспроизвести'}
+      >
+        {isPlaying ? (
+          <div className="flex items-center justify-center gap-1 h-5">
+            <span className="w-1 h-full bg-[var(--foreground)] rounded-full audio-wave-bar" style={{ animationDelay: '0ms' }} />
+            <span className="w-1 h-full bg-[var(--foreground)] rounded-full audio-wave-bar" style={{ animationDelay: '100ms' }} />
+            <span className="w-1 h-full bg-[var(--foreground)] rounded-full audio-wave-bar" style={{ animationDelay: '200ms' }} />
+            <span className="w-1 h-full bg-[var(--foreground)] rounded-full audio-wave-bar" style={{ animationDelay: '300ms' }} />
+            <span className="w-1 h-full bg-[var(--foreground)] rounded-full audio-wave-bar" style={{ animationDelay: '400ms' }} />
+          </div>
+        ) : (
+          <svg className="w-6 h-6 text-[var(--foreground)] ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        )}
+      </button>
+
+      {/* Track info & progress */}
+      <div className="min-w-0 flex-1">
+        <p className="font-medium truncate text-[var(--foreground)] mb-2">{name}</p>
+
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-[var(--text-muted)] tabular-nums w-9 shrink-0">{formatTime(currentTime)}</span>
+          <div className="relative flex-1 h-2 rounded-full bg-[var(--border)] overflow-hidden cursor-pointer">
             <input
               type="range"
               min={0}
               max={duration || 100}
               value={currentTime}
               onChange={handleSeek}
-              className="flex-1 audio-progress cursor-pointer"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             />
-            <span className="text-xs text-[var(--text-muted)] w-9">{formatTime(duration)}</span>
+            <div
+              className="absolute left-0 top-0 h-full rounded-full bg-[var(--foreground)] transition-all duration-100"
+              style={{ width: `${progress}%` }}
+            />
           </div>
+          <span className="text-xs text-[var(--text-muted)] tabular-nums w-9 shrink-0 text-right">{formatTime(duration)}</span>
         </div>
       </div>
+
+      {/* Play/Pause button (desktop) */}
+      <button
+        type="button"
+        onClick={togglePlay}
+        className="hidden sm:flex w-10 h-10 rounded-full bg-[var(--foreground)] text-[var(--background)] items-center justify-center shrink-0 hover:opacity-90 transition-opacity"
+        aria-label={isPlaying ? 'Пауза' : 'Воспроизвести'}
+      >
+        {isPlaying ? (
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <rect x="6" y="4" width="4" height="16" rx="1" />
+            <rect x="14" y="4" width="4" height="16" rx="1" />
+          </svg>
+        ) : (
+          <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        )}
+      </button>
     </div>
   );
 }
