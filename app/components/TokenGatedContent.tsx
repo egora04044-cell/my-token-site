@@ -9,6 +9,7 @@ import { isAdmin } from '@/lib/admin';
 import { usePhantomMobile } from '@/lib/phantom-mobile';
 import AudioPlayer from './AudioPlayer';
 import GlassBlock from './GlassBlock';
+import SecureFileLink from './SecureFileLink';
 
 const REQUIRED_TOKEN_MINT = new PublicKey("9AB5cgUf1r1iUU2MfYyzm3YujXpdyS1JQVqRSkxbpump");
 const REQUIRED_AMOUNT = 1000;
@@ -99,8 +100,38 @@ export default function TokenGatedContent() {
                 .catch(() => setUploadedFiles([]));
         } else {
             setUploadedFiles([]);
+            setFileAccess({});
         }
     }, [hasAccess]);
+
+    const [fileAccess, setFileAccess] = useState<Record<string, { token: string; address: string }>>({});
+
+    useEffect(() => {
+        if (!hasAccess || !publicKey || uploadedFiles.length === 0) return;
+        const addr = publicKey.toString();
+        const fetchTokens = async () => {
+            const access: Record<string, { token: string; address: string }> = {};
+            await Promise.all(
+                uploadedFiles.map(async (f) => {
+                    try {
+                        const res = await fetch('/api/serve-token', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ path: f.path, address: addr }),
+                        });
+                        if (res.ok) {
+                            const { token } = await res.json();
+                            access[f.path] = { token, address: addr };
+                        }
+                    } catch {
+                        // ignore
+                    }
+                })
+            );
+            setFileAccess((prev) => ({ ...prev, ...access }));
+        };
+        fetchTokens();
+    }, [hasAccess, publicKey, uploadedFiles]);
 
     const shortenAddress = (addr: string) => `${addr.slice(0, 4)}...${addr.slice(-4)}`;
     const isAudioFile = (name: string) => /\.(mp3|wav|ogg|m4a|flac)$/i.test(name);
@@ -271,7 +302,7 @@ export default function TokenGatedContent() {
                         <h1 className="font-serif text-[clamp(2rem,4vw,2.75rem)] font-normal mb-2">Добро пожаловать в эксклюзивную зону</h1>
                         <p className="text-[var(--text-secondary)] mb-12">Контент только для держателей токенов</p>
 
-                        <GlassBlock className="p-8">
+                        <GlassBlock className="p-8" onContextMenu={(e) => e.preventDefault()}>
                             <h2 className="text-2xl font-semibold mb-4"><span className="opacity-60">🌟</span> Эксклюзивный контент</h2>
                             {uploadedFiles.length > 0 ? (
                                 <div className="space-y-6">
@@ -325,18 +356,30 @@ export default function TokenGatedContent() {
                                             <div className="grid grid-cols-1 gap-3">
                                                 {uploadedFiles
                                                     .filter((f) => isAudioFile(f.name))
-                                                    .map((f) => (
-                                                        <AudioPlayer
-                                                            key={f.id}
-                                                            id={f.id}
-                                                            src={`/api/serve?path=${encodeURIComponent(f.path)}`}
-                                                            name={f.name}
-                                                            playingId={playingId}
-                                                            onPlay={setPlayingId}
-                                                            volume={volume}
-                                                            isMuted={isMuted}
-                                                        />
-                                                    ))}
+                                                    .map((f) =>
+                                                        fileAccess[f.path] ? (
+                                                            <AudioPlayer
+                                                                key={f.id}
+                                                                id={f.id}
+                                                                path={f.path}
+                                                                token={fileAccess[f.path].token}
+                                                                address={fileAccess[f.path].address}
+                                                                name={f.name}
+                                                                playingId={playingId}
+                                                                onPlay={setPlayingId}
+                                                                volume={volume}
+                                                                isMuted={isMuted}
+                                                            />
+                                                        ) : (
+                                                            <div key={f.id} className="flex items-center gap-4 p-4 bg-[var(--bg-elevated)] rounded-xl border border-[var(--border)] opacity-60">
+                                                                <div className="w-12 h-12 rounded-full bg-[var(--border)] animate-pulse" />
+                                                                <div className="flex-1">
+                                                                    <p className="text-sm font-medium truncate">{f.name}</p>
+                                                                    <p className="text-xs text-[var(--text-muted)]">Загрузка...</p>
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    )}
                                             </div>
                                         </div>
                                     )}
@@ -347,23 +390,13 @@ export default function TokenGatedContent() {
                                                 {uploadedFiles
                                                     .filter((f) => !isAudioFile(f.name))
                                                     .map((f) => (
-                                                        <a
+                                                        <SecureFileLink
                                                             key={f.id}
-                                                            href={`/api/serve?path=${encodeURIComponent(f.path)}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="flex items-center gap-3 p-4 bg-[var(--bg-elevated)] rounded-lg border border-[var(--border)] hover:border-[var(--accent)]/50 transition-colors"
-                                                        >
-                                                            <span className="text-2xl">
-                                                                {f.name.match(/\.(mp4|webm|mov)$/i) ? '🎬' : f.name.match(/\.(jpg|png|gif|webp)$/i) ? '🖼️' : '📄'}
-                                                            </span>
-                                                            <div className="min-w-0 flex-1">
-                                                                <p className="text-sm font-medium truncate">{f.name}</p>
-                                                                <p className="text-xs text-[var(--text-muted)]">
-                                                                    {(f.size / 1024).toFixed(1)} KB
-                                                                </p>
-                                                            </div>
-                                                        </a>
+                                                            path={f.path}
+                                                            access={fileAccess[f.path]}
+                                                            name={f.name}
+                                                            size={f.size}
+                                                        />
                                                     ))}
                                             </div>
                                         </div>

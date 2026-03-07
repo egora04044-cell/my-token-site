@@ -4,7 +4,9 @@ import { useRef, useState, useEffect } from 'react';
 
 interface AudioPlayerProps {
   id: string;
-  src: string;
+  path: string;
+  token: string;
+  address: string;
   name: string;
   playingId: string | null;
   onPlay: (id: string | null) => void;
@@ -12,13 +14,49 @@ interface AudioPlayerProps {
   isMuted: boolean;
 }
 
-export default function AudioPlayer({ id, src, name, playingId, onPlay, volume, isMuted }: AudioPlayerProps) {
+export default function AudioPlayer({ id, path, token, address, name, playingId, onPlay, volume, isMuted }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const savedTimeRef = useRef(0);
   const pausedByExternalRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const blobUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    let revoked = false;
+    const load = async () => {
+      try {
+        const res = await fetch(`/api/serve?path=${encodeURIComponent(path)}`, {
+          headers: {
+            'X-Serve-Token': token,
+            'X-Serve-Address': address,
+          },
+        });
+        if (!res.ok) throw new Error('Access denied');
+        const blob = await res.blob();
+        if (revoked) {
+          URL.revokeObjectURL(URL.createObjectURL(blob));
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        blobUrlRef.current = url;
+        setBlobUrl(url);
+      } catch {
+        if (!revoked) setLoadError(true);
+      }
+    };
+    load();
+    return () => {
+      revoked = true;
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+        blobUrlRef.current = null;
+      }
+    };
+  }, [path, token, address]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -47,8 +85,8 @@ export default function AudioPlayer({ id, src, name, playingId, onPlay, volume, 
       onPlay(id);
     };
     const handlePause = () => {
-      const audio = audioRef.current;
-      if (audio) savedTimeRef.current = audio.currentTime;
+      const a = audioRef.current;
+      if (a) savedTimeRef.current = a.currentTime;
       setIsPlaying(false);
       if (!pausedByExternalRef.current) onPlay(null);
       pausedByExternalRef.current = false;
@@ -67,7 +105,7 @@ export default function AudioPlayer({ id, src, name, playingId, onPlay, volume, 
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
     };
-  }, [src, id, onPlay]);
+  }, [blobUrl, id, onPlay]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -107,11 +145,38 @@ export default function AudioPlayer({ id, src, name, playingId, onPlay, volume, 
     const m = Math.floor(sec / 60);
     const s = Math.floor(sec % 60);
     return `${m}:${s.toString().padStart(2, '0')}`;
-    };
+  };
+
+  if (loadError) {
+    return (
+      <div className="flex items-center gap-4 p-4 bg-[var(--bg-elevated)] rounded-xl border border-[var(--border)] opacity-60">
+        <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center text-red-400">✕</div>
+        <div className="flex-1">
+          <p className="text-sm font-medium truncate">{name}</p>
+          <p className="text-xs text-[var(--text-muted)]">Ошибка загрузки</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!blobUrl) {
+    return (
+      <div className="flex items-center gap-4 p-4 bg-[var(--bg-elevated)] rounded-xl border border-[var(--border)] opacity-60">
+        <div className="w-12 h-12 rounded-full bg-[var(--border)] animate-pulse" />
+        <div className="flex-1">
+          <p className="text-sm font-medium truncate">{name}</p>
+          <p className="text-xs text-[var(--text-muted)]">Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col gap-3 p-4 bg-[var(--bg-elevated)] rounded-xl border border-[var(--border)] hover:border-[var(--border-hover)] transition-colors">
-      <audio ref={audioRef} src={src} preload="metadata" />
+    <div
+      className="flex flex-col gap-3 p-4 bg-[var(--bg-elevated)] rounded-xl border border-[var(--border)] hover:border-[var(--border-hover)] transition-colors select-none"
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <audio ref={audioRef} src={blobUrl} preload="metadata" />
       <div className="flex items-center gap-4">
         <button
           type="button"

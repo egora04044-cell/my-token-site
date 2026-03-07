@@ -5,9 +5,10 @@ import { useState, useRef, useCallback } from 'react';
 interface GlassBlockProps {
   children: React.ReactNode;
   className?: string;
+  onContextMenu?: (e: React.MouseEvent) => void;
 }
 
-export default function GlassBlock({ children, className = '' }: GlassBlockProps) {
+export default function GlassBlock({ children, className = '', onContextMenu }: GlassBlockProps) {
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const blockRef = useRef<HTMLDivElement>(null);
 
@@ -29,6 +30,7 @@ export default function GlassBlock({ children, className = '' }: GlassBlockProps
       ref={blockRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onContextMenu={onContextMenu}
       className={`rounded-xl border border-[var(--border)] transition-transform duration-150 ease-out ${className}`}
       style={{
         background: 'rgba(24, 24, 27, 0.35)',
