@@ -111,7 +111,8 @@ export default function AudioPlayer({ id, path, token, address, name, coverPath,
   useEffect(() => {
     const audio = audioRef.current;
     if (playingId !== null && playingId !== id && audio) {
-      savedTimeRef.current = audio.currentTime;
+      savedTimeRef.current = 0;
+      setCurrentTime(0);
       pausedByExternalRef.current = true;
       audio.pause();
     }

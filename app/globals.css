@@ -45,6 +45,10 @@
   --font-serif: var(--font-display), ui-serif, Georgia, serif;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -98,6 +102,18 @@ a[href]:active,
   background: var(--bg-card) !important;
   border: 1px solid var(--border) !important;
   border-radius: 12px !important;
+}
+
+/* Выпадающее меню кошелька открывается вверх */
+.wallet-adapter-dropdown-list {
+  top: auto !important;
+  bottom: 100% !important;
+  margin-bottom: 8px !important;
+  margin-top: 0 !important;
+}
+
+.wallet-adapter-dropdown-list-active {
+  transform: translateY(-8px) !important;
 }
 
 input[type="range"].audio-progress {
