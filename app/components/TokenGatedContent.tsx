@@ -201,13 +201,9 @@ export default function TokenGatedContent() {
                                                 </svg>
                                                 Подключить Phantom
                                             </button>
-                                            <p className="text-sm text-[var(--text-muted)]">
-                                                Откроется приложение Phantom. После подтверждения вы вернётесь в этот браузер.
+                                            <p className="text-sm text-[var(--text-muted)] text-center max-w-[320px]">
+                                                Откроется приложение Phantom. Подключите кошелёк — вы автоматически вернётесь в браузер с доступом к эксклюзивному контенту.
                                             </p>
-                                            <div className="w-full max-w-[320px] border-t border-[var(--border)] pt-4">
-                                                <p className="text-xs text-[var(--text-muted)] mb-2">Или через WalletConnect:</p>
-                                                <WalletMultiButton className="!flex !items-center !justify-center !gap-3 !w-full !rounded-xl" />
-                                            </div>
                                         </>
                                     ) : (
                                         <>

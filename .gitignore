@@ -17,6 +17,8 @@
 /.next/
 .next.zip
 /out/
+deploy-ready/
+deploy-ready.zip
 
 # production
 /build

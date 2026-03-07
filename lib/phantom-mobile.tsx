@@ -46,8 +46,12 @@ export function PhantomMobileProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     if (typeof window === 'undefined' || !PHANTOM_APP_ID) return;
 
+    const ua = navigator.userAgent;
+    const isMobileOrTablet = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) || window.innerWidth < 768;
+    const providers = isMobileOrTablet ? (['deeplink'] as const) : (['injected'] as const);
+
     const instance = new BrowserSDK({
-      providers: ['deeplink', 'injected'],
+      providers,
       addressTypes: [AddressType.solana],
       appId: PHANTOM_APP_ID,
       authOptions: {
