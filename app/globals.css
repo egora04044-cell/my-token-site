@@ -159,3 +159,17 @@ input[type="range"].audio-progress::-moz-range-thumb {
   animation: wave-bar 0.8s ease-in-out infinite;
   transform-origin: center;
 }
+
+/* Фон правой части (контент) — обои */
+.content-area-bg {
+  position: relative;
+  background: url('/bg-wallpaper.png') right top / cover no-repeat;
+}
+
+.content-area-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, var(--background) 0%, var(--background) 15%, transparent 50%);
+  pointer-events: none;
+}

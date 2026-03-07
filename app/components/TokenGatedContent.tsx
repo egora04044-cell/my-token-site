@@ -147,6 +147,7 @@ export default function TokenGatedContent() {
     const [volume, setVolume] = useState(1);
     const [isMuted, setIsMuted] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [activeSection, setActiveSection] = useState('projects');
     useEffect(() => {
         const check = () => {
             const ua = navigator.userAgent;
@@ -157,6 +158,37 @@ export default function TokenGatedContent() {
         window.addEventListener('resize', check);
         return () => window.removeEventListener('resize', check);
     }, []);
+
+    const navItems = [
+        { id: 'projects', label: 'Проекты' },
+        { id: 'about', label: 'О нас' },
+        { id: 'contact', label: 'Контакты' },
+    ];
+
+    const scrollToSection = (id: string) => {
+        setActiveSection(id);
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    useEffect(() => {
+        if (!connected || !hasAccess) return;
+        const ids = ['projects', 'about', 'contact'];
+        const handleScroll = () => {
+            const scrollY = window.scrollY + 150;
+            for (let i = ids.length - 1; i >= 0; i--) {
+                const el = document.getElementById(ids[i]);
+                if (el) {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.top + window.scrollY <= scrollY) {
+                        setActiveSection(ids[i]);
+                        break;
+                    }
+                }
+            }
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [connected, hasAccess]);
 
     return (
         <div className="min-h-screen">
@@ -281,35 +313,79 @@ export default function TokenGatedContent() {
 
             {/* Content Screen */}
             {connected && hasAccess && !loading && !isBlocked && (
-                <main className="min-h-screen flex flex-col">
-                    <nav className="w-full max-w-[1200px] mx-auto px-6 py-6 flex items-center justify-between border-b border-[var(--border)]">
-                        <a href="/" className="font-display text-sm font-semibold text-[var(--foreground)] tracking-tight">ARTIST</a>
-                        <div className="flex items-center gap-4">
-                            <ThemeToggle />
+                <main className="min-h-screen flex">
+                    {/* Left sidebar navigation — как на Framer */}
+                    <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-48 lg:w-56 xl:w-64 border-r border-[var(--border)] bg-[var(--background)] z-20">
+                        <div className="p-6 pb-4">
+                            <a href="/" className="font-display text-sm font-semibold text-[var(--foreground)] tracking-tight">ARTIST</a>
+                        </div>
+                        <nav className="flex-1 px-6 py-4 space-y-1">
+                            {navItems.map((item) => (
+                                <button
+                                    key={item.id}
+                                    type="button"
+                                    onClick={() => scrollToSection(item.id)}
+                                    className={`block w-full text-left text-sm py-2 px-3 rounded-lg transition-colors ${
+                                        activeSection === item.id
+                                            ? 'text-[var(--foreground)] font-medium bg-[var(--bg-elevated)]'
+                                            : 'text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--bg-secondary)]'
+                                    }`}
+                                >
+                                    {item.label}
+                                </button>
+                            ))}
+                        </nav>
+                        <div className="p-6 pt-4 border-t border-[var(--border)] space-y-3">
+                            <div className="flex items-center gap-2">
+                                <ThemeToggle />
+                                <span className="text-xs text-[var(--text-muted)]">{shortenAddress(publicKey?.toString() || '')}</span>
+                            </div>
                             {isAdmin(publicKey?.toString()) && (
-                                <a href="/admin" className="text-sm text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors">
+                                <a href="/admin" className="block text-xs text-[var(--text-muted)] hover:text-[var(--foreground)]">
                                     Админ
                                 </a>
                             )}
-                            <span className="text-xs font-mono text-[var(--text-muted)]">{shortenAddress(publicKey?.toString() || '')}</span>
-                            <span className="text-xs px-2.5 py-1 bg-[var(--bg-secondary)] text-[var(--text-secondary)] rounded">
+                            <span className="text-xs text-[var(--text-muted)]">
                                 {Math.floor(tokenBalance || 0).toLocaleString()} токенов
                             </span>
                             {usePhantomMobileConnection ? (
-                                <button type="button" onClick={phantomDisconnect} className="text-sm text-[var(--text-muted)] hover:text-[var(--foreground)]">
+                                <button type="button" onClick={phantomDisconnect} className="text-xs text-[var(--text-muted)] hover:text-[var(--foreground)]">
                                     Отключить
                                 </button>
                             ) : (
-                                <WalletMultiButton className="!rounded-lg !py-2 !text-sm" />
+                                <WalletMultiButton className="!rounded-lg !py-2 !text-xs !block" />
                             )}
                         </div>
-                    </nav>
+                    </aside>
 
-                    <section className="flex-1 max-w-[1200px] w-full mx-auto px-6 py-16">
-                        <h1 className="font-serif text-[clamp(1.75rem,3vw,2.25rem)] font-normal text-[var(--foreground)] mb-2">
-                            Эксклюзивный контент
-                        </h1>
-                        <p className="text-[var(--text-secondary)] mb-12">Только для держателей токенов</p>
+                    {/* Mobile top bar */}
+                    <div className="lg:hidden fixed top-0 left-0 right-0 z-20 bg-[var(--background)] border-b border-[var(--border)] px-4 py-3 flex items-center justify-between">
+                        <a href="/" className="font-display text-sm font-semibold">ARTIST</a>
+                        <div className="flex items-center gap-3">
+                            <nav className="flex gap-2">
+                                {navItems.map((item) => (
+                                    <button
+                                        key={item.id}
+                                        type="button"
+                                        onClick={() => scrollToSection(item.id)}
+                                        className={`text-xs px-2 py-1 rounded ${activeSection === item.id ? 'bg-[var(--bg-elevated)] font-medium' : 'text-[var(--text-muted)]'}`}
+                                    >
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </nav>
+                            <ThemeToggle />
+                            <WalletMultiButton className="!rounded-lg !py-1.5 !text-xs" />
+                        </div>
+                    </div>
+
+                    {/* Main content — scrollable */}
+                    <div className="content-area-bg flex-1 lg:pl-48 xl:pl-64 min-h-screen pt-16 lg:pt-0">
+                        <section id="projects" className="min-h-screen px-6 py-16 lg:py-24">
+                            <h1 className="font-display text-[clamp(1.75rem,3vw,2.25rem)] font-semibold text-[var(--foreground)] mb-2">
+                                Проекты
+                            </h1>
+                            <p className="text-[var(--text-secondary)] mb-12">Эксклюзивный контент для держателей токенов</p>
 
                         <div className="p-8 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg">
                             {uploadedFiles.length > 0 ? (
@@ -365,7 +441,22 @@ export default function TokenGatedContent() {
                                 <p className="text-[var(--text-secondary)]">Контент появится здесь. Админ загружает файлы в панели управления.</p>
                             )}
                         </div>
-                    </section>
+                        </section>
+
+                        <section id="about" className="min-h-screen px-6 py-16 lg:py-24 border-t border-[var(--border)]">
+                            <h2 className="font-display text-2xl font-semibold text-[var(--foreground)] mb-4">О нас</h2>
+                            <p className="text-[var(--text-secondary)] max-w-[600px] leading-relaxed">
+                                Эксклюзивное сообщество для держателей токенов артиста. Ранний доступ к релизам, закрытые материалы и личное сообщество.
+                            </p>
+                        </section>
+
+                        <section id="contact" className="min-h-screen px-6 py-16 lg:py-24 border-t border-[var(--border)]">
+                            <h2 className="font-display text-2xl font-semibold text-[var(--foreground)] mb-4">Контакты</h2>
+                            <p className="text-[var(--text-secondary)] max-w-[600px] leading-relaxed">
+                                Свяжитесь с нами через сообщество или официальные каналы артиста.
+                            </p>
+                        </section>
+                    </div>
                 </main>
             )}
         </div>
