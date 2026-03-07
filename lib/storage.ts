@@ -117,3 +117,14 @@ export async function deleteUploadedFile(id: string): Promise<boolean> {
   await writeFilesMeta(files);
   return true;
 }
+
+export async function renameUploadedFile(id: string, newName: string): Promise<UploadedFile | null> {
+  const files = await readFilesMeta();
+  const index = files.findIndex((f) => f.id === id);
+  if (index === -1) return null;
+  const trimmed = newName.trim();
+  if (!trimmed) return null;
+  files[index] = { ...files[index], name: trimmed };
+  await writeFilesMeta(files);
+  return files[index];
+}

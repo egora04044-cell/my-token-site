@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
-import { IBM_Plex_Serif, IBM_Plex_Sans } from 'next/font/google'
+import Script from 'next/script'
+import { DM_Sans, Space_Grotesk } from 'next/font/google'
 import './globals.css'
 import { ClientOnlyProviders } from './components/ClientOnlyProviders'
 
-const ibmPlexSerif = IBM_Plex_Serif({ weight: ['400', '500'], subsets: ['latin'], variable: '--font-display' })
-const ibmPlexSans = IBM_Plex_Sans({ weight: ['400', '500', '600'], subsets: ['latin'], variable: '--font-body' })
+const dmSans = DM_Sans({ weight: ['400', '500', '600', '700'], subsets: ['latin'], variable: '--font-body' })
+const spaceGrotesk = Space_Grotesk({ weight: ['400', '500', '600', '700'], subsets: ['latin'], variable: '--font-display' })
 
 export const metadata: Metadata = {
   title: 'Exclusive Access | Artist Token Gate',
@@ -18,8 +19,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ru" className={`${ibmPlexSerif.variable} ${ibmPlexSans.variable}`}>
+    <html lang="ru" className={`${dmSans.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
       <body className="font-sans antialiased">
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`(function(){var t=localStorage.getItem('theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='dark'||(!t&&d))document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');})();`}
+        </Script>
         <div className="noise-overlay" />
         <ClientOnlyProviders>{children}</ClientOnlyProviders>
       </body>

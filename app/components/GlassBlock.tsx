@@ -33,7 +33,7 @@ export default function GlassBlock({ children, className = '', onContextMenu }: 
       onContextMenu={onContextMenu}
       className={`rounded-xl border border-[var(--border)] transition-transform duration-150 ease-out ${className}`}
       style={{
-        background: 'rgba(24, 24, 27, 0.35)',
+        background: 'var(--bg-card)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,

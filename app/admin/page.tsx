@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ADMIN_ADDRESSES, isAdmin } from '@/lib/admin';
 import GlassBlock from '@/app/components/GlassBlock';
+import ThemeToggle from '@/app/components/ThemeToggle';
 
 interface ConnectedAddress {
   address: string;
@@ -163,6 +164,41 @@ export default function AdminPage() {
     }
   };
 
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+
+  const handleRenameStart = (f: UploadedFile) => {
+    setRenamingId(f.id);
+    setRenameValue(f.name);
+  };
+
+  const handleRenameSave = async () => {
+    if (!adminAddress || !renamingId) return;
+    const trimmed = renameValue.trim();
+    if (!trimmed) {
+      setRenamingId(null);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/files/${renamingId}`, {
+        method: 'PATCH',
+        headers: { ...headers(adminAddress), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: trimmed }),
+      });
+      if (!res.ok) throw new Error('Ошибка переименования');
+      const updated = await res.json();
+      setFiles((prev) => prev.map((f) => (f.id === renamingId ? updated : f)));
+      setRenamingId(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Ошибка');
+    }
+  };
+
+  const handleRenameCancel = () => {
+    setRenamingId(null);
+    setRenameValue('');
+  };
+
   const shortenAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -206,12 +242,15 @@ export default function AdminPage() {
     <div className="min-h-screen px-6 py-8">
       <header className="max-w-4xl mx-auto flex items-center justify-between mb-12 pb-6 border-b border-[var(--border)]">
         <div className="flex items-center gap-4">
-          <Link href="/" className="text-[var(--text-muted)] hover:text-white text-sm">
+          <Link href="/" className="text-[var(--text-muted)] hover:text-[var(--foreground)] text-sm">
             ← Главная
           </Link>
-          <h1 className="font-serif text-2xl">Админ-панель</h1>
+          <h1 className="font-display text-2xl font-semibold">Админ-панель</h1>
         </div>
-        <WalletMultiButton className="!rounded-lg !py-2 !text-sm" />
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <WalletMultiButton className="!rounded-lg !py-2 !text-sm" />
+        </div>
       </header>
 
       <main className="max-w-4xl mx-auto space-y-12">
@@ -281,24 +320,58 @@ export default function AdminPage() {
                       className="flex items-center justify-between gap-4 py-3 border-b border-[var(--border)] last:border-0"
                     >
                       <div className="min-w-0 flex-1">
-                        <a
-                          href={f.path}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[var(--accent-bright)] hover:underline truncate block"
-                        >
-                          {f.name}
-                        </a>
-                        <span className="text-xs text-[var(--text-muted)]">
-                          {formatSize(f.size)} · {categoryLabel(f.category)}
-                        </span>
+                        {renamingId === f.id ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={renameValue}
+                              onChange={(e) => setRenameValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleRenameSave();
+                                if (e.key === 'Escape') handleRenameCancel();
+                              }}
+                              className="flex-1 bg-[var(--bg-elevated)] border border-[var(--border)] rounded px-2 py-1 text-sm"
+                              autoFocus
+                            />
+                            <button onClick={handleRenameSave} className="text-sm text-emerald-400 hover:text-emerald-300">
+                              Сохранить
+                            </button>
+                            <button onClick={handleRenameCancel} className="text-sm text-[var(--text-muted)] hover:text-[var(--foreground)]">
+                              Отмена
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <a
+                              href={f.path}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[var(--accent-bright)] hover:underline truncate block"
+                            >
+                              {f.name}
+                            </a>
+                            <span className="text-xs text-[var(--text-muted)]">
+                              {formatSize(f.size)} · {categoryLabel(f.category)}
+                            </span>
+                          </>
+                        )}
                       </div>
-                      <button
-                        onClick={() => handleDelete(f.id)}
-                        className="text-red-400 hover:text-red-300 text-sm px-2 py-1"
-                      >
-                        Удалить
-                      </button>
+                      {renamingId !== f.id && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleRenameStart(f)}
+                            className="text-[var(--text-muted)] hover:text-[var(--foreground)] text-sm px-2 py-1"
+                          >
+                            Переименовать
+                          </button>
+                          <button
+                            onClick={() => handleDelete(f.id)}
+                            className="text-red-400 hover:text-red-300 text-sm px-2 py-1"
+                          >
+                            Удалить
+                          </button>
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>

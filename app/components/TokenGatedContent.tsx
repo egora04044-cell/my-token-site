@@ -9,6 +9,7 @@ import { isAdmin } from '@/lib/admin';
 import { usePhantomMobile } from '@/lib/phantom-mobile';
 import AudioPlayer from './AudioPlayer';
 import SecureFileLink from './SecureFileLink';
+import ThemeToggle from './ThemeToggle';
 
 const REQUIRED_TOKEN_MINT = new PublicKey("9AB5cgUf1r1iUU2MfYyzm3YujXpdyS1JQVqRSkxbpump");
 const REQUIRED_AMOUNT = 1000;
@@ -161,21 +162,22 @@ export default function TokenGatedContent() {
             {/* Gate Screen */}
             {(!connected || loading || !hasAccess || isBlocked) && (
                 <main className="min-h-screen flex flex-col">
-                    <nav className="w-full max-w-[1200px] mx-auto px-6 py-6 flex items-center justify-between">
-                        <a href="/" className="text-sm font-medium text-[var(--foreground)] tracking-wide">ARTIST</a>
-                        <div className="flex items-center gap-6">
+                    <nav className="w-full max-w-[1200px] mx-auto px-6 py-6 flex items-center justify-between opacity-0 animate-fade-in-up">
+                        <a href="/" className="font-display text-sm font-semibold text-[var(--foreground)] tracking-tight">ARTIST</a>
+                        <div className="flex items-center gap-4">
                             {connected && isAdmin(publicKey?.toString()) && (
                                 <a href="/admin" className="text-sm text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors">
                                     Админ
                                 </a>
                             )}
+                            <ThemeToggle />
                             <span className="text-xs text-[var(--text-muted)] px-2.5 py-1 border border-[var(--border)] rounded">EXCLUSIVE</span>
                         </div>
                     </nav>
 
-                    <section className="flex-1 flex flex-col items-center justify-center px-6 py-16 max-w-[640px] mx-auto text-center">
+                    <section className="flex-1 flex flex-col items-center justify-center px-6 py-16 w-full max-w-[720px] mx-auto text-center">
                         {isPhantomInAppBrowser && !connected && (
-                            <div className="w-full mb-8 p-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg">
+                            <div className="w-full mb-8 p-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl opacity-0 animate-fade-in-up animate-delay-200">
                                 <p className="text-[var(--foreground)] font-medium mb-4">
                                     Откройте сайт в Safari или Chrome для подключения кошелька.
                                 </p>
@@ -188,15 +190,15 @@ export default function TokenGatedContent() {
                             </div>
                         )}
 
-                        <h1 className="font-serif text-[clamp(2.25rem,5vw,3rem)] font-normal leading-tight text-[var(--foreground)] mb-4">
+                        <h1 className="font-display text-[clamp(2.5rem,6vw,4rem)] font-semibold leading-[1.1] text-[var(--foreground)] mb-5 opacity-0 animate-fade-in-up">
                             Доступ к эксклюзивному контенту
                         </h1>
-                        <p className="text-[var(--text-secondary)] text-[1rem] leading-relaxed mb-12">
-                            Подключите Phantom кошелёк с минимум <strong className="font-medium text-[var(--foreground)]">{REQUIRED_AMOUNT} токенов</strong> артиста,
+                        <p className="text-[var(--text-secondary)] text-[1.05rem] leading-relaxed mb-14 max-w-[520px] mx-auto opacity-0 animate-fade-in-up animate-delay-100">
+                            Подключите Phantom кошелёк с минимум <strong className="font-semibold text-[var(--foreground)]">{REQUIRED_AMOUNT} токенов</strong> артиста,
                             чтобы получить доступ к закрытым материалам и ранним релизам.
                         </p>
 
-                        <div className="w-full max-w-[360px] mx-auto">
+                        <div className="w-full max-w-[360px] mx-auto flex flex-col items-center opacity-0 animate-fade-in-up animate-delay-200">
                             {!connected ? (
                                 <div className="flex flex-col gap-4">
                                     {hasDeeplinkSupport ? (
@@ -229,8 +231,10 @@ export default function TokenGatedContent() {
                                         </>
                                     ) : (
                                         <>
-                                            <WalletMultiButton className="!flex !items-center !justify-center !gap-3 !w-full !rounded-lg" />
-                                            <p className="text-sm text-[var(--text-muted)]">
+                                            <div className="w-full flex justify-center">
+                                                <WalletMultiButton className="!flex !items-center !justify-center !gap-3 !rounded-lg !mx-auto" />
+                                            </div>
+                                            <p className="text-sm text-[var(--text-muted)] text-center mt-3">
                                                 {isMobile ? 'На телефоне: откройте сайт в Safari или Chrome.' : 'Безопасное подключение через Phantom'}
                                             </p>
                                         </>
@@ -264,10 +268,12 @@ export default function TokenGatedContent() {
                         </div>
                     </section>
 
-                    <footer className="py-8 text-center">
-                        <p className="text-xs text-[var(--text-muted)]">
-                            Phantom Wallet · {REQUIRED_AMOUNT}+ токенов · Solana
-                        </p>
+                    <footer className="py-12 flex flex-col items-center gap-4 opacity-0 animate-fade-in-up animate-delay-400">
+                        <p className="text-xs text-[var(--text-muted)]">Phantom Wallet · {REQUIRED_AMOUNT}+ токенов · Solana</p>
+                        <p className="text-xs text-[var(--text-muted)]/70">Прокрутите вниз</p>
+                        <svg className="w-5 h-5 text-[var(--text-muted)]/50 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                        </svg>
                     </footer>
                 </main>
             )}
@@ -276,8 +282,9 @@ export default function TokenGatedContent() {
             {connected && hasAccess && !loading && !isBlocked && (
                 <main className="min-h-screen flex flex-col">
                     <nav className="w-full max-w-[1200px] mx-auto px-6 py-6 flex items-center justify-between border-b border-[var(--border)]">
-                        <a href="/" className="text-sm font-medium text-[var(--foreground)] tracking-wide">ARTIST</a>
+                        <a href="/" className="font-display text-sm font-semibold text-[var(--foreground)] tracking-tight">ARTIST</a>
                         <div className="flex items-center gap-4">
+                            <ThemeToggle />
                             {isAdmin(publicKey?.toString()) && (
                                 <a href="/admin" className="text-sm text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors">
                                     Админ

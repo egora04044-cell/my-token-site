@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* ===== Minimal Portfolio Design System ===== */
+/* ===== Light theme (default) ===== */
 :root {
   --background: #fafafa;
   --bg: #fafafa;
@@ -19,6 +19,25 @@
   --border-hover: rgba(0, 0, 0, 0.15);
 }
 
+/* ===== Dark theme ===== */
+.dark {
+  --background: #0a0a0a;
+  --bg: #0a0a0a;
+  --foreground: #fafafa;
+  --bg-secondary: #171717;
+  --bg-card: #141414;
+  --bg-elevated: #1a1a1a;
+  --text-secondary: #a3a3a3;
+  --text-muted: #737373;
+  --accent: #fafafa;
+  --accent-bright: #d4d4d4;
+  --accent-glow: rgba(255, 255, 255, 0.05);
+  --success: #22c55e;
+  --error: #ef4444;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.15);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -32,6 +51,7 @@ body {
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 button,
@@ -49,7 +69,6 @@ a[href]:active,
   transform: scale(0.98) translateY(0) !important;
 }
 
-/* Minimal noise - very subtle */
 .noise-overlay {
   position: fixed;
   inset: 0;
@@ -58,7 +77,6 @@ a[href]:active,
   z-index: 1000;
 }
 
-/* Wallet adapter - minimal black */
 .wallet-adapter-button {
   background: var(--foreground) !important;
   color: var(--background) !important;
@@ -82,7 +100,6 @@ a[href]:active,
   border-radius: 12px !important;
 }
 
-/* Audio player range slider */
 input[type="range"].audio-progress {
   -webkit-appearance: none;
   appearance: none;
@@ -105,4 +122,29 @@ input[type="range"].audio-progress::-moz-range-thumb {
   background: var(--foreground);
   cursor: pointer;
   border: none;
+}
+
+/* Portfolite-style animations */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-delay-100 { animation-delay: 0.1s; }
+.animate-delay-200 { animation-delay: 0.2s; }
+.animate-delay-300 { animation-delay: 0.3s; }
+.animate-delay-400 { animation-delay: 0.4s; }
+
+.font-display {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
 }
