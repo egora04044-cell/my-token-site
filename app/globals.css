@@ -160,21 +160,53 @@ input[type="range"].audio-progress::-moz-range-thumb {
   transform-origin: center;
 }
 
-/* Фон правой части (контент) — обои */
+/* Фон правой части (контент) — обои, повёрнутые на 90° */
 .content-area-bg {
   position: relative;
-  background: url('/bg-wallpaper.png') right top / cover no-repeat;
+  color: var(--foreground);
+  overflow: hidden;
 }
 
+/* Обои повёрнуты на 90 градусов */
+.content-area-bg::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100vmax;
+  height: 100vmax;
+  background: url('/bg-wallpaper.png') center center / cover no-repeat;
+  transform: translate(-50%, -50%) rotate(90deg);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Градиент-оверлей для читаемости текста */
 .content-area-bg::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, var(--background) 0%, var(--background) 15%, transparent 50%);
+  background: linear-gradient(
+    to right,
+    var(--background) 0%,
+    var(--background) 30%,
+    color-mix(in srgb, var(--background) 85%, transparent) 55%,
+    color-mix(in srgb, var(--background) 50%, transparent) 75%,
+    transparent 90%
+  );
+  z-index: 1;
   pointer-events: none;
 }
 
-/* Шрифт правой части: белый в тёмной теме, чёрный в светлой */
-.content-area-bg {
-  color: var(--foreground);
+/* Текст поверх оверлея и тень для контраста */
+.content-area-bg > * {
+  position: relative;
+  z-index: 2;
+}
+
+.content-area-bg h1,
+.content-area-bg h2,
+.content-area-bg h3,
+.content-area-bg p {
+  text-shadow: 0 0 12px var(--background), 0 1px 3px var(--background);
 }
