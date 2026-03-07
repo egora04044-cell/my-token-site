@@ -173,3 +173,8 @@ input[type="range"].audio-progress::-moz-range-thumb {
   background: linear-gradient(to right, var(--background) 0%, var(--background) 15%, transparent 50%);
   pointer-events: none;
 }
+
+/* Шрифт правой части: белый в тёмной теме, чёрный в светлой */
+.content-area-bg {
+  color: var(--foreground);
+}
