@@ -142,6 +142,7 @@ export default function TokenGatedContent() {
 
     const shortenAddress = (addr: string) => `${addr.slice(0, 4)}...${addr.slice(-4)}`;
     const isAudioFile = (name: string) => /\.(mp3|wav|ogg|m4a|flac)$/i.test(name);
+    const isTrack = (f: UploadedFile) => f.category === 'tracks' || isAudioFile(f.name);
     const [playingId, setPlayingId] = useState<string | null>(null);
     const [volume, setVolume] = useState(1);
     const [isMuted, setIsMuted] = useState(false);
@@ -313,7 +314,7 @@ export default function TokenGatedContent() {
                         <div className="p-8 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg">
                             {uploadedFiles.length > 0 ? (
                                 <div className="space-y-10">
-                                    {uploadedFiles.filter((f) => isAudioFile(f.name)).length > 0 && (
+                                    {uploadedFiles.filter(isTrack).length > 0 && (
                                         <div>
                                             <div className="flex items-center justify-between gap-4 mb-4">
                                                 <h2 className="text-lg font-medium text-[var(--foreground)]">Треки</h2>
@@ -336,9 +337,9 @@ export default function TokenGatedContent() {
                                                 </div>
                                             </div>
                                             <div className="grid gap-3">
-                                                {uploadedFiles.filter((f) => isAudioFile(f.name)).map((f) =>
+                                                {uploadedFiles.filter(isTrack).map((f) =>
                                                     fileAccess[f.path] ? (
-                                                        <AudioPlayer key={f.id} id={f.id} path={f.path} token={fileAccess[f.path].token} address={fileAccess[f.path].address} name={f.name} playingId={playingId} onPlay={setPlayingId} volume={volume} isMuted={isMuted} />
+                                                        <AudioPlayer key={f.id} id={f.id} path={f.path} token={fileAccess[f.path].token} address={fileAccess[f.path].address} name={f.name} coverPath={f.coverPath} playingId={playingId} onPlay={setPlayingId} volume={volume} isMuted={isMuted} />
                                                     ) : (
                                                         <div key={f.id} className="flex items-center gap-4 p-4 bg-[var(--bg-secondary)] rounded-lg animate-pulse">
                                                             <div className="w-10 h-10 rounded bg-[var(--border)]" />
@@ -349,11 +350,11 @@ export default function TokenGatedContent() {
                                             </div>
                                         </div>
                                     )}
-                                    {uploadedFiles.filter((f) => !isAudioFile(f.name)).length > 0 && (
+                                    {uploadedFiles.filter((f) => !isTrack(f)).length > 0 && (
                                         <div>
                                             <h2 className="text-lg font-medium text-[var(--foreground)] mb-4">Другие файлы</h2>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                {uploadedFiles.filter((f) => !isAudioFile(f.name)).map((f) => (
+                                                {uploadedFiles.filter((f) => !isTrack(f)).map((f) => (
                                                     <SecureFileLink key={f.id} path={f.path} access={fileAccess[f.path]} name={f.name} size={f.size} />
                                                 ))}
                                             </div>

@@ -21,6 +21,7 @@ interface UploadedFile {
   size: number;
   uploadedAt: string;
   category?: string;
+  coverPath?: string;
 }
 
 const headers = (address: string) => ({
@@ -36,8 +37,10 @@ export default function AdminPage() {
   const [blockInput, setBlockInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadingCoverId, setUploadingCoverId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const adminAddress = publicKey?.toString();
   const [category, setCategory] = useState<'tracks' | 'videos' | 'community' | 'tickets' | 'other'>('tracks');
@@ -199,6 +202,35 @@ export default function AdminPage() {
     setRenameValue('');
   };
 
+  const isTrack = (f: UploadedFile) => f.category === 'tracks' || /\.(mp3|wav|ogg|m4a|flac)$/i.test(f.name);
+
+  const handleCoverUpload = async (fileId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const coverFile = e.target.files?.[0];
+    if (!coverFile || !adminAddress) return;
+    setUploadingCoverId(fileId);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append('cover', coverFile);
+      const res = await fetch(`/api/files/${fileId}/cover`, {
+        method: 'POST',
+        headers: headers(adminAddress),
+        body: formData,
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Ошибка загрузки обложки');
+      }
+      const updated = await res.json();
+      setFiles((prev) => prev.map((f) => (f.id === fileId ? updated : f)));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Ошибка');
+    } finally {
+      setUploadingCoverId(null);
+      e.target.value = '';
+    }
+  };
+
   const shortenAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -357,7 +389,25 @@ export default function AdminPage() {
                         )}
                       </div>
                       {renamingId !== f.id && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {isTrack(f) && (
+                            <>
+                              <input
+                                ref={(el) => { coverInputRefs.current[f.id] = el; }}
+                                type="file"
+                                accept="image/jpeg,image/png,image/gif,image/webp"
+                                onChange={(e) => handleCoverUpload(f.id, e)}
+                                className="hidden"
+                              />
+                              <button
+                                onClick={() => coverInputRefs.current[f.id]?.click()}
+                                disabled={uploadingCoverId === f.id}
+                                className="text-[var(--text-muted)] hover:text-[var(--foreground)] text-sm px-2 py-1 disabled:opacity-50"
+                              >
+                                {uploadingCoverId === f.id ? 'Загрузка...' : f.coverPath ? 'Сменить обложку' : 'Обложка'}
+                              </button>
+                            </>
+                          )}
                           <button
                             onClick={() => handleRenameStart(f)}
                             className="text-[var(--text-muted)] hover:text-[var(--foreground)] text-sm px-2 py-1"

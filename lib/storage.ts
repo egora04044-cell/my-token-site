@@ -20,6 +20,7 @@ export interface UploadedFile {
   size: number;
   uploadedAt: string;
   category: FileCategory;
+  coverPath?: string;
 }
 
 async function ensureDir(dir: string) {
@@ -81,6 +82,12 @@ export async function getUploadedFiles(): Promise<UploadedFile[]> {
   }));
 }
 
+export async function getFileById(id: string): Promise<UploadedFile | null> {
+  const files = await readFilesMeta();
+  const f = files.find((x) => x.id === id);
+  return f ? { ...f, category: f.category ?? 'other' } : null;
+}
+
 export async function addUploadedFile(
   name: string,
   savedPath: string,
@@ -118,13 +125,29 @@ export async function deleteUploadedFile(id: string): Promise<boolean> {
   return true;
 }
 
+const AUDIO_EXT = /\.(mp3|wav|ogg|m4a|flac)$/i;
+
 export async function renameUploadedFile(id: string, newName: string): Promise<UploadedFile | null> {
   const files = await readFilesMeta();
   const index = files.findIndex((f) => f.id === id);
   if (index === -1) return null;
   const trimmed = newName.trim();
   if (!trimmed) return null;
-  files[index] = { ...files[index], name: trimmed };
+  const file = files[index];
+  const ext = path.extname(file.path);
+  const finalName = AUDIO_EXT.test(ext) && !AUDIO_EXT.test(trimmed) ? `${trimmed}${ext}` : trimmed;
+  files[index] = { ...file, name: finalName };
+  await writeFilesMeta(files);
+  return files[index];
+}
+
+export const COVERS_DIR = path.join(process.cwd(), 'public', 'uploads', 'covers');
+
+export async function setFileCover(id: string, coverPath: string): Promise<UploadedFile | null> {
+  const files = await readFilesMeta();
+  const index = files.findIndex((f) => f.id === id);
+  if (index === -1) return null;
+  files[index] = { ...files[index], coverPath };
   await writeFilesMeta(files);
   return files[index];
 }

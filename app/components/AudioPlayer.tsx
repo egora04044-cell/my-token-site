@@ -8,13 +8,14 @@ interface AudioPlayerProps {
   token: string;
   address: string;
   name: string;
+  coverPath?: string;
   playingId: string | null;
   onPlay: (id: string | null) => void;
   volume: number;
   isMuted: boolean;
 }
 
-export default function AudioPlayer({ id, path, token, address, name, playingId, onPlay, volume, isMuted }: AudioPlayerProps) {
+export default function AudioPlayer({ id, path, token, address, name, coverPath, playingId, onPlay, volume, isMuted }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const savedTimeRef = useRef(0);
   const pausedByExternalRef = useRef(false);
@@ -196,6 +197,10 @@ export default function AudioPlayer({ id, path, token, address, name, playingId,
         className="relative w-14 h-14 rounded-xl shrink-0 overflow-hidden bg-gradient-to-br from-[var(--foreground)]/10 to-[var(--foreground)]/5 flex items-center justify-center transition-transform hover:scale-[1.02] active:scale-[0.98]"
         aria-label={isPlaying ? 'Пауза' : 'Воспроизвести'}
       >
+        {coverPath ? (
+          <img src={coverPath} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        ) : null}
+        <span className={`relative z-10 flex items-center justify-center ${coverPath ? 'bg-black/40 rounded-xl w-full h-full' : ''}`}>
         {isPlaying ? (
           <div className="flex items-center justify-center gap-1 h-5">
             <span className="w-1 h-full bg-[var(--foreground)] rounded-full audio-wave-bar" style={{ animationDelay: '0ms' }} />
@@ -209,6 +214,7 @@ export default function AudioPlayer({ id, path, token, address, name, playingId,
             <path d="M8 5v14l11-7z" />
           </svg>
         )}
+        </span>
       </button>
 
       {/* Track info & progress */}
