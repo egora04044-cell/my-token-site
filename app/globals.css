@@ -1,21 +1,22 @@
 @import "tailwindcss";
 
-/* ===== Design System ===== */
+/* ===== Minimal Portfolio Design System ===== */
 :root {
-  --background: #0a0a0b;
-  --foreground: #fafafa;
-  --bg-secondary: rgba(18, 18, 20, 0.55);
-  --bg-card: rgba(24, 24, 27, 0.5);
-  --bg-elevated: rgba(31, 31, 35, 0.55);
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
-  --accent: #a78bfa;
-  --accent-bright: #c4b5fd;
-  --accent-glow: rgba(167, 139, 250, 0.25);
-  --success: #34d399;
-  --error: #f87171;
-  --border: rgba(255, 255, 255, 0.06);
-  --border-hover: rgba(255, 255, 255, 0.12);
+  --background: #fafafa;
+  --bg: #fafafa;
+  --foreground: #171717;
+  --bg-secondary: #f5f5f5;
+  --bg-card: #ffffff;
+  --bg-elevated: #ffffff;
+  --text-secondary: #525252;
+  --text-muted: #737373;
+  --accent: #171717;
+  --accent-bright: #404040;
+  --accent-glow: rgba(0, 0, 0, 0.05);
+  --success: #22c55e;
+  --error: #ef4444;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-hover: rgba(0, 0, 0, 0.15);
 }
 
 @theme inline {
@@ -33,7 +34,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Кнопки и ссылки — курсор-палец, эффект нажатия */
 button,
 a[href],
 [role="button"],
@@ -49,78 +49,60 @@ a[href]:active,
   transform: scale(0.98) translateY(0) !important;
 }
 
-/* Artist background logo */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(circle at 50% 40%, rgba(167, 139, 250, 0.25), transparent 65%),
-    url("/photo_2026-03-03_10-39-30.jpg?v=2") no-repeat center;
-  background-size: min(520px, 70vw), min(680px, 85vw);
-  opacity: 0.22;
-  mix-blend-mode: screen;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Noise overlay */
+/* Minimal noise - very subtle */
 .noise-overlay {
   position: fixed;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.015'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 1000;
 }
 
-/* Wallet adapter button override */
+/* Wallet adapter - minimal black */
 .wallet-adapter-button {
-  background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 50%, #c4b5fd 100%) !important;
-  color: #0a0a0b !important;
-  font-weight: 600 !important;
-  border-radius: 12px !important;
+  background: var(--foreground) !important;
+  color: var(--background) !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
   padding: 0.75rem 1.5rem !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  box-shadow: 0 4px 24px var(--accent-glow) !important;
+  transition: all 0.2s ease !important;
 }
 
 .wallet-adapter-button:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 8px 32px var(--accent-glow) !important;
-  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%) !important;
+  opacity: 0.9 !important;
 }
 
 .wallet-adapter-modal-wrapper {
-  background: rgba(0, 0, 0, 0.8) !important;
+  background: rgba(0, 0, 0, 0.4) !important;
 }
 
 .wallet-adapter-modal-container {
   background: var(--bg-card) !important;
   border: 1px solid var(--border) !important;
-  border-radius: 20px !important;
+  border-radius: 12px !important;
 }
 
 /* Audio player range slider */
 input[type="range"].audio-progress {
   -webkit-appearance: none;
   appearance: none;
-  height: 6px;
-  background: var(--bg-card);
-  border-radius: 3px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
 }
 input[type="range"].audio-progress::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--foreground);
   cursor: pointer;
 }
 input[type="range"].audio-progress::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--foreground);
   cursor: pointer;
   border: none;
 }

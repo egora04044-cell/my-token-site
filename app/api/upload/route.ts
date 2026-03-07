@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
+import { createWriteStream } from 'fs';
+import { mkdir } from 'fs/promises';
+import { pipeline } from 'stream/promises';
+import { Readable } from 'stream';
 import path from 'path';
 import { isAdmin } from '@/lib/admin';
 import { addUploadedFile, UPLOADS_DIR, FileCategory } from '@/lib/storage';
@@ -44,12 +47,13 @@ export async function POST(request: NextRequest) {
       category = 'other';
     }
 
-    await fs.mkdir(UPLOADS_DIR, { recursive: true });
-    const ext = path.extname(file.name) || '.bin';
+    await mkdir(UPLOADS_DIR, { recursive: true });
     const safeName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
     const filePath = path.join(UPLOADS_DIR, safeName);
-    const bytes = await file.arrayBuffer();
-    await fs.writeFile(filePath, Buffer.from(bytes));
+    const webStream = file.stream();
+    const nodeReadable = Readable.fromWeb(webStream as import('stream/web').ReadableStream);
+    const writeStream = createWriteStream(filePath);
+    await pipeline(nodeReadable, writeStream);
 
     const savedPath = `/uploads/${safeName}`;
     const uploaded = await addUploadedFile(file.name, savedPath, file.size, category as FileCategory);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
+import { createReadStream, existsSync, statSync } from 'fs';
+import { Readable } from 'stream';
 import path from 'path';
 import { UPLOADS_DIR } from '@/lib/storage';
 import { verifyServeToken } from '@/lib/serve-token';
@@ -27,12 +28,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const stat = await fs.stat(normalizedPath);
-    if (!stat.isFile()) {
+    if (!existsSync(normalizedPath)) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    const content = await fs.readFile(normalizedPath);
     const ext = path.extname(pathParam).toLowerCase();
     const mimeTypes: Record<string, string> = {
       '.mp3': 'audio/mpeg',
@@ -51,11 +50,16 @@ export async function GET(request: NextRequest) {
     };
     const mime = mimeTypes[ext] || 'application/octet-stream';
 
-    return new NextResponse(content, {
+    const nodeStream = createReadStream(normalizedPath);
+    const webStream = Readable.toWeb(nodeStream) as ReadableStream;
+    const { size } = statSync(normalizedPath);
+
+    return new NextResponse(webStream, {
       headers: {
         'Content-Type': mime,
-        'Content-Length': stat.size.toString(),
+        'Content-Length': size.toString(),
         'Accept-Ranges': 'bytes',
+        'Cache-Control': 'private, max-age=300',
       },
     });
   } catch (e) {

@@ -25,7 +25,7 @@ function AuthCallbackContent() {
     }
 
     const sdk = new BrowserSDK({
-      providers: ['deeplink', 'injected'],
+      providers: ['deeplink', 'google', 'apple', 'injected'],
       addressTypes: [AddressType.solana],
       appId: PHANTOM_APP_ID,
       authOptions: {

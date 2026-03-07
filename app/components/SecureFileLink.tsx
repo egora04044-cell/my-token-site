@@ -42,7 +42,7 @@ export default function SecureFileLink({ path, access, name, size }: SecureFileL
       type="button"
       onClick={handleClick}
       disabled={!access || loading}
-      className="flex items-center gap-3 p-4 bg-[var(--bg-elevated)] rounded-lg border border-[var(--border)] hover:border-[var(--accent)]/50 transition-colors w-full text-left disabled:opacity-60 disabled:pointer-events-none"
+      className="flex items-center gap-3 p-4 bg-[var(--bg-card)] rounded-lg border border-[var(--border)] hover:border-[var(--border-hover)] transition-colors w-full text-left disabled:opacity-60 disabled:pointer-events-none"
     >
       <span className="text-2xl">{icon}</span>
       <div className="min-w-0 flex-1">

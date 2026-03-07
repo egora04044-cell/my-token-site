@@ -149,7 +149,7 @@ export default function AudioPlayer({ id, path, token, address, name, playingId,
 
   if (loadError) {
     return (
-      <div className="flex items-center gap-4 p-4 bg-[var(--bg-elevated)] rounded-xl border border-[var(--border)] opacity-60">
+      <div className="flex items-center gap-4 p-4 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border)] opacity-60">
         <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center text-red-400">✕</div>
         <div className="flex-1">
           <p className="text-sm font-medium truncate">{name}</p>
@@ -161,7 +161,7 @@ export default function AudioPlayer({ id, path, token, address, name, playingId,
 
   if (!blobUrl) {
     return (
-      <div className="flex items-center gap-4 p-4 bg-[var(--bg-elevated)] rounded-xl border border-[var(--border)] opacity-60">
+      <div className="flex items-center gap-4 p-4 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border)] opacity-60">
         <div className="w-12 h-12 rounded-full bg-[var(--border)] animate-pulse" />
         <div className="flex-1">
           <p className="text-sm font-medium truncate">{name}</p>
@@ -173,7 +173,7 @@ export default function AudioPlayer({ id, path, token, address, name, playingId,
 
   return (
     <div
-      className="flex flex-col gap-3 p-4 bg-[var(--bg-elevated)] rounded-xl border border-[var(--border)] hover:border-[var(--border-hover)] transition-colors select-none"
+      className="flex flex-col gap-3 p-4 bg-[var(--bg-card)] rounded-lg border border-[var(--border)] hover:border-[var(--border-hover)] transition-colors select-none"
       onContextMenu={(e) => e.preventDefault()}
     >
       <audio ref={audioRef} src={blobUrl} preload="metadata" />
@@ -181,7 +181,7 @@ export default function AudioPlayer({ id, path, token, address, name, playingId,
         <button
           type="button"
           onClick={togglePlay}
-          className="flex-shrink-0 w-12 h-12 rounded-full bg-[var(--accent)]/20 text-[var(--accent)] opacity-70 hover:opacity-100 flex items-center justify-center hover:bg-[var(--accent)]/30 transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
+          className="flex-shrink-0 w-12 h-12 rounded-full bg-[var(--bg-secondary)] text-[var(--foreground)] flex items-center justify-center hover:bg-[var(--border)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--border-hover)]"
           aria-label={isPlaying ? 'Пауза' : 'Воспроизвести'}
         >
           {isPlaying ? (
