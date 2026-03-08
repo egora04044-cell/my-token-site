@@ -398,6 +398,11 @@ export default function TokenGatedContent() {
 
                     {/* Main content — scrollable */}
                     <div className="content-area-bg flex-1 lg:pl-48 xl:pl-64 min-h-screen pt-16 lg:pt-0">
+                        <div className="gradient-mesh" aria-hidden="true">
+                            <div className="gradient-orb" />
+                            <div className="gradient-orb" />
+                            <div className="gradient-orb" />
+                        </div>
                         <section id="projects" className="min-h-screen px-6 py-16 lg:py-24">
                             <h1 className="font-display text-[clamp(1.75rem,3vw,2.25rem)] font-semibold text-[var(--foreground)] mb-2">
                                 Проекты

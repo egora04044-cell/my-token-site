@@ -176,12 +176,78 @@ input[type="range"].audio-progress::-moz-range-thumb {
   transform-origin: center;
 }
 
-/* Фон правой части (контент) — обои */
+/* Фон правой части (контент) — анимированный градиент как на Framer Portfolite */
 .content-area-bg {
   position: relative;
-  background: url('/bg-wallpaper.png') right top / cover no-repeat;
+  background: var(--background);
   color: var(--foreground);
   overflow: hidden;
+}
+
+.content-area-bg .gradient-mesh {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.content-area-bg .gradient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  animation: gradient-orb-float 20s ease-in-out infinite;
+}
+
+.content-area-bg .gradient-orb:nth-child(1) {
+  width: 60vmax;
+  height: 60vmax;
+  background: radial-gradient(circle, color-mix(in srgb, var(--foreground) 15%, var(--background)) 0%, transparent 70%);
+  top: -20%;
+  right: -10%;
+  animation-delay: 0s;
+  animation-duration: 25s;
+}
+
+.content-area-bg .gradient-orb:nth-child(2) {
+  width: 50vmax;
+  height: 50vmax;
+  background: radial-gradient(circle, color-mix(in srgb, var(--foreground) 12%, var(--background)) 0%, transparent 70%);
+  bottom: -15%;
+  right: 20%;
+  animation-delay: -5s;
+  animation-duration: 22s;
+}
+
+.content-area-bg .gradient-orb:nth-child(3) {
+  width: 45vmax;
+  height: 45vmax;
+  background: radial-gradient(circle, color-mix(in srgb, var(--foreground) 10%, var(--background)) 0%, transparent 70%);
+  top: 40%;
+  right: -5%;
+  animation-delay: -10s;
+  animation-duration: 28s;
+}
+
+@keyframes gradient-orb-float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(5%, -5%) scale(1.05);
+  }
+  50% {
+    transform: translate(-3%, 3%) scale(0.98);
+  }
+  75% {
+    transform: translate(4%, 2%) scale(1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content-area-bg .gradient-orb {
+    animation: none;
+  }
 }
 
 .content-area-bg::before {
@@ -192,14 +258,15 @@ input[type="range"].audio-progress::-moz-range-thumb {
     to right,
     var(--background) 0%,
     var(--background) 25%,
-    color-mix(in srgb, var(--background) 80%, transparent) 55%,
-    color-mix(in srgb, var(--background) 40%, transparent) 80%,
+    color-mix(in srgb, var(--background) 85%, transparent) 55%,
+    color-mix(in srgb, var(--background) 50%, transparent) 80%,
     transparent 95%
   );
+  z-index: 1;
   pointer-events: none;
 }
 
-.content-area-bg > * {
+.content-area-bg > *:not(.gradient-mesh) {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
