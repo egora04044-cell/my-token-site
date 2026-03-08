@@ -176,8 +176,30 @@ input[type="range"].audio-progress::-moz-range-thumb {
   transform-origin: center;
 }
 
-/* Фон правой части (контент) */
+/* Фон правой части (контент) — обои */
 .content-area-bg {
-  background: var(--background);
+  position: relative;
+  background: url('/bg-wallpaper.png') right top / cover no-repeat;
   color: var(--foreground);
+  overflow: hidden;
+}
+
+.content-area-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    var(--background) 0%,
+    var(--background) 25%,
+    color-mix(in srgb, var(--background) 80%, transparent) 55%,
+    color-mix(in srgb, var(--background) 40%, transparent) 80%,
+    transparent 95%
+  );
+  pointer-events: none;
+}
+
+.content-area-bg > * {
+  position: relative;
+  z-index: 1;
 }

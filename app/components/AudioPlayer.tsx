@@ -184,8 +184,8 @@ export default function AudioPlayer({ id, path, token, address, name, coverPath,
     <div
       className={`group flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 select-none ${
         isActive
-          ? 'border-[var(--foreground)]/20 bg-[var(--bg-elevated)] shadow-lg shadow-[var(--foreground)]/5'
-          : 'border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--border-hover)] hover:bg-[var(--bg-elevated)]'
+          ? 'border-[var(--foreground)]/20 bg-[var(--bg-elevated)]/70 backdrop-blur-md shadow-lg shadow-[var(--foreground)]/5'
+          : 'border-[var(--border)]/70 bg-[var(--bg-card)]/60 backdrop-blur-md hover:border-[var(--border-hover)] hover:bg-[var(--bg-elevated)]/70'
       }`}
       onContextMenu={(e) => e.preventDefault()}
     >

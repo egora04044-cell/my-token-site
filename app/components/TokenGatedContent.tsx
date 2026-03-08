@@ -387,7 +387,7 @@ export default function TokenGatedContent() {
                             </h1>
                             <p className="text-[var(--text-secondary)] mb-12">Эксклюзивный контент для держателей токенов</p>
 
-                        <div className="p-8 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg">
+                        <div className="p-8 bg-[var(--bg-card)]/60 backdrop-blur-xl border border-[var(--border)]/60 rounded-lg">
                             {uploadedFiles.length > 0 ? (
                                 <div className="space-y-10">
                                     {uploadedFiles.filter(isTrack).length > 0 && (
@@ -417,7 +417,7 @@ export default function TokenGatedContent() {
                                                     fileAccess[f.path] ? (
                                                         <AudioPlayer key={f.id} id={f.id} path={f.path} token={fileAccess[f.path].token} address={fileAccess[f.path].address} name={f.name} coverPath={f.coverPath} playingId={playingId} onPlay={setPlayingId} volume={volume} isMuted={isMuted} />
                                                     ) : (
-                                                        <div key={f.id} className="flex items-center gap-4 p-4 bg-[var(--bg-secondary)] rounded-lg animate-pulse">
+                                                        <div key={f.id} className="flex items-center gap-4 p-4 bg-[var(--bg-secondary)]/60 backdrop-blur-md rounded-lg animate-pulse">
                                                             <div className="w-10 h-10 rounded bg-[var(--border)]" />
                                                             <div><p className="text-sm font-medium truncate">{f.name}</p><p className="text-xs text-[var(--text-muted)]">Загрузка...</p></div>
                                                         </div>
