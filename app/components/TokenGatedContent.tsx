@@ -40,10 +40,11 @@ export default function TokenGatedContent() {
     const mountedRef = useRef(true);
     useEffect(() => () => { mountedRef.current = false; }, []);
 
-    const checkTokenBalance = async () => {
+    const checkTokenBalance = async (retryCount = 0) => {
         if (!publicKey || !connection) return;
-        setLoading(true);
+        if (retryCount === 0) setLoading(true);
         setIsBlocked(false);
+        let done = false;
         try {
             const blockedRes = await fetch('/api/check-blocked', {
                 method: 'POST',
@@ -69,29 +70,45 @@ export default function TokenGatedContent() {
                 const balance = tokenAccounts.value[0].account.data.parsed.info.tokenAmount.uiAmount;
                 setTokenBalance(balance);
                 setHasAccess(balance >= REQUIRED_AMOUNT);
+                done = true;
             } else {
                 setTokenBalance(0);
                 setHasAccess(false);
+                if (retryCount < 2 && mountedRef.current) {
+                    setTimeout(() => checkTokenBalance(retryCount + 1), 2000 + retryCount * 2000);
+                } else {
+                    done = true;
+                }
             }
         } catch (error) {
             if (mountedRef.current) {
                 console.error('Ошибка при проверке баланса:', error);
                 setTokenBalance(0);
                 setHasAccess(false);
+                if (retryCount < 2) {
+                    setTimeout(() => checkTokenBalance(retryCount + 1), 2000 + retryCount * 2000);
+                } else {
+                    done = true;
+                }
             }
         } finally {
-            if (mountedRef.current) setLoading(false);
+            if (mountedRef.current && done) setLoading(false);
         }
     };
 
     useEffect(() => {
         if (connected && publicKey && connection) {
-            checkTokenBalance();
-            fetch('/api/connect', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ address: publicKey.toString() }),
-            }).catch(() => {});
+            const fromAuth = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('phantom_connected') === '1';
+            const delay = fromAuth ? 1500 : 0;
+            const t = setTimeout(() => {
+                checkTokenBalance();
+                fetch('/api/connect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: publicKey.toString() }),
+                }).catch(() => {});
+            }, delay);
+            return () => clearTimeout(t);
         } else {
             setTokenBalance(null);
             setHasAccess(false);
@@ -238,28 +255,28 @@ export default function TokenGatedContent() {
                                         <>
                                             <button
                                                 type="button"
-                                                onClick={connectPhantom}
-                                                className="flex items-center justify-center gap-3 w-full px-6 py-3.5 bg-[var(--foreground)] hover:opacity-90 text-[var(--background)] font-medium rounded-lg transition-opacity"
-                                            >
-                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24Z" fill="url(#phantom-b)"/><path d="M13.5 6H10.5V14.25C10.5 14.6625 10.8375 15 11.25 15H12.75C13.1625 15 13.5 14.6625 13.5 14.25V6Z" fill="white"/><path d="M16.5 6H15V8.25H16.5C16.9125 8.25 17.25 8.5875 17.25 9V6.75C17.25 6.3375 16.9125 6 16.5 6Z" fill="white"/><defs><linearGradient id="phantom-b" x1="12" y1="0" x2="12" y2="24" gradientUnits="userSpaceOnUse"><stop stopColor="#534BB1"/><stop offset="1" stopColor="#551BF9"/></linearGradient></defs></svg>
-                                                Phantom (приложение) — для доступа к токенам
-                                            </button>
-                                            <p className="text-xs text-[var(--text-muted)] mt-2">Или войти через</p>
-                                            <button
-                                                type="button"
                                                 onClick={connectWithGoogle}
-                                                className="flex items-center justify-center gap-3 w-full px-6 py-3 bg-white hover:bg-gray-50 text-gray-800 font-medium rounded-lg transition-colors border border-[var(--border)]"
+                                                className="flex items-center justify-center gap-3 w-full px-6 py-3.5 bg-white hover:bg-gray-50 text-gray-800 font-medium rounded-lg transition-colors border border-[var(--border)]"
                                             >
                                                 <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                                                Google
+                                                Войти через Google
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={connectWithApple}
-                                                className="flex items-center justify-center gap-3 w-full px-6 py-3 bg-[var(--foreground)] hover:opacity-90 text-[var(--background)] font-medium rounded-lg transition-opacity"
+                                                className="flex items-center justify-center gap-3 w-full px-6 py-3.5 bg-[var(--foreground)] hover:opacity-90 text-[var(--background)] font-medium rounded-lg transition-opacity"
                                             >
                                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-1.18 1.35-2.15 2.7-3.45 3.95zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
-                                                Apple
+                                                Войти через Apple
+                                            </button>
+                                            <p className="text-xs text-[var(--text-muted)] mt-2">Или</p>
+                                            <button
+                                                type="button"
+                                                onClick={connectPhantom}
+                                                className="flex items-center justify-center gap-3 w-full px-6 py-3 border border-[var(--border)] hover:border-[var(--border-hover)] text-[var(--foreground)] font-medium rounded-lg transition-colors"
+                                            >
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24Z" fill="url(#phantom-b)"/><path d="M13.5 6H10.5V14.25C10.5 14.6625 10.8375 15 11.25 15H12.75C13.1625 15 13.5 14.6625 13.5 14.25V6Z" fill="white"/><path d="M16.5 6H15V8.25H16.5C16.9125 8.25 17.25 8.5875 17.25 9V6.75C17.25 6.3375 16.9125 6 16.5 6Z" fill="white"/><defs><linearGradient id="phantom-b" x1="12" y1="0" x2="12" y2="24" gradientUnits="userSpaceOnUse"><stop stopColor="#534BB1"/><stop offset="1" stopColor="#551BF9"/></linearGradient></defs></svg>
+                                                Phantom (приложение)
                                             </button>
                                         </>
                                     ) : (
@@ -290,22 +307,9 @@ export default function TokenGatedContent() {
                                         На кошельке <strong>{Math.floor(tokenBalance || 0).toLocaleString()}</strong> токенов. Требуется минимум <strong>{REQUIRED_AMOUNT}</strong>.
                                     </p>
                                     {usePhantomMobileConnection ? (
-                                        <>
-                                            <p className="text-xs text-[var(--text-muted)] mb-4 max-w-[320px] mx-auto">
-                                                Вход через Google/Apple создаёт новый кошелёк. Чтобы использовать токены из Phantom, войдите через <strong>«Phantom (приложение)»</strong>.
-                                            </p>
-                                            <button type="button" onClick={phantomDisconnect} className="text-sm text-[var(--text-muted)] hover:text-[var(--foreground)] underline mb-3 block">
-                                                Отключить кошелёк
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={connectPhantom}
-                                                className="flex items-center justify-center gap-3 w-full px-6 py-3 bg-[var(--foreground)] text-[var(--background)] font-medium rounded-lg hover:opacity-90 transition-opacity"
-                                            >
-                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24Z" fill="url(#phantom-b)"/><path d="M13.5 6H10.5V14.25C10.5 14.6625 10.8375 15 11.25 15H12.75C13.1625 15 13.5 14.6625 13.5 14.25V6Z" fill="white"/><path d="M16.5 6H15V8.25H16.5C16.9125 8.25 17.25 8.5875 17.25 9V6.75C17.25 6.3375 16.9125 6 16.5 6Z" fill="white"/><defs><linearGradient id="phantom-b" x1="12" y1="0" x2="12" y2="24" gradientUnits="userSpaceOnUse"><stop stopColor="#534BB1"/><stop offset="1" stopColor="#551BF9"/></linearGradient></defs></svg>
-                                                Войти через Phantom (приложение)
-                                            </button>
-                                        </>
+                                        <button type="button" onClick={phantomDisconnect} className="text-sm text-[var(--text-muted)] hover:text-[var(--foreground)] underline">
+                                            Отключить кошелёк
+                                        </button>
                                     ) : (
                                         <WalletMultiButton className="!rounded-lg" />
                                     )}

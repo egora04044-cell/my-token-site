@@ -67,9 +67,13 @@ export function PhantomMobileProvider({ children }: { children: React.ReactNode 
     }
 
     let instance: BrowserSDK | null = null;
+    const isSolanaAddr = (a: { addressType?: string; type?: string }) => {
+      const t = (a.addressType || a.type || '').toLowerCase();
+      return t === 'solana';
+    };
     const onConnect = (data: { addresses?: Array<{ address: string; addressType?: string }> }) => {
       setConnected(true);
-      const solanaAddr = data.addresses?.find((a) => (a.addressType || (a as { type?: string }).type) === 'solana');
+      const solanaAddr = data.addresses?.find((a) => isSolanaAddr(a as { addressType?: string; type?: string }));
       if (solanaAddr?.address) {
         try {
           setPublicKey(new PublicKey(solanaAddr.address));
@@ -110,7 +114,10 @@ export function PhantomMobileProvider({ children }: { children: React.ReactNode 
         if (!mountedRef.current || !instance) return;
         if (instance.isConnected()) {
           const addrs = instance.getAddresses();
-          const solana = addrs?.find((a: { addressType?: string; type?: string }) => a.addressType === 'solana' || a.type === 'solana');
+          const solana = addrs?.find((a: { addressType?: string; type?: string }) => {
+            const t = (a.addressType || a.type || '').toLowerCase();
+            return t === 'solana';
+          });
           if (solana && 'address' in solana) {
             try {
               setPublicKey(new PublicKey((solana as { address: string }).address));
