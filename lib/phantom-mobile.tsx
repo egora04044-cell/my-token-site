@@ -101,9 +101,14 @@ export function PhantomMobileProvider({ children }: { children: React.ReactNode 
 
       if (mountedRef.current) setSdk(instance);
 
-      instance.autoConnect().then(() => {
-        if (!mountedRef.current) return;
-        if (instance?.isConnected()) {
+      const fromAuth = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('phantom_connected') === '1';
+      if (fromAuth && typeof window !== 'undefined') {
+        window.history.replaceState({}, '', '/');
+      }
+
+      const tryRestore = () => {
+        if (!mountedRef.current || !instance) return;
+        if (instance.isConnected()) {
           const addrs = instance.getAddresses();
           const solana = addrs?.find((a: { addressType?: string; type?: string }) => a.addressType === 'solana' || a.type === 'solana');
           if (solana && 'address' in solana) {
@@ -114,6 +119,13 @@ export function PhantomMobileProvider({ children }: { children: React.ReactNode 
               // ignore
             }
           }
+        }
+      };
+
+      instance.autoConnect().then(() => {
+        tryRestore();
+        if (fromAuth && !instance?.isConnected()) {
+          setTimeout(() => instance?.autoConnect().then(tryRestore).catch(() => {}), 1500);
         }
       }).catch(() => {});
     } catch (err) {

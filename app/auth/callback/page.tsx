@@ -18,9 +18,16 @@ function AuthCallbackContent() {
       return;
     }
 
-    const hasPhantomParams = searchParams.has('data') || searchParams.has('phantom_encryption_public_key');
+    const hasPhantomParams =
+      searchParams.has('data') ||
+      searchParams.has('phantom_encryption_public_key') ||
+      searchParams.has('session_id') ||
+      searchParams.has('wallet_id') ||
+      searchParams.has('organization_id') ||
+      searchParams.has('code');
+
     if (!hasPhantomParams) {
-      window.location.href = '/';
+      window.location.replace('/');
       return;
     }
 
@@ -37,8 +44,8 @@ function AuthCallbackContent() {
     sdk.on('connect', () => {
       setStatus('success');
       setTimeout(() => {
-        window.location.href = '/';
-      }, 800);
+        window.location.replace('/?phantom_connected=1');
+      }, 2000);
     });
 
     sdk.on('connect_error', (data: { error?: unknown }) => {
@@ -72,7 +79,10 @@ function AuthCallbackContent() {
           <>
             <div className="w-14 h-14 rounded-full bg-red-500/15 text-[var(--error)] flex items-center justify-center text-2xl mx-auto mb-4">✕</div>
             <p className="text-[var(--foreground)] font-medium mb-2">Ошибка подключения</p>
-            <p className="text-sm text-[var(--text-muted)] mb-6">{errorMsg}</p>
+            <p className="text-sm text-[var(--text-muted)] mb-4">{errorMsg}</p>
+            <p className="text-xs text-[var(--text-muted)] mb-6">
+              Попробуйте снова или откройте сайт в Safari/Chrome (не в браузере Phantom).
+            </p>
             <a href="/" className="inline-block px-6 py-2.5 bg-[var(--accent)] text-white rounded-xl hover:opacity-90 transition-opacity">
               Вернуться на главную
             </a>
