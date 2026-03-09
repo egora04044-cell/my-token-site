@@ -203,13 +203,10 @@ export default function AudioPlayer({ id, path, token, address, name, coverPath,
         ) : null}
         <span className={`relative z-10 flex items-center justify-center ${coverPath ? 'bg-black/40 rounded-xl w-full h-full' : ''}`}>
         {isPlaying ? (
-          <div className="flex items-center justify-center gap-1 h-5">
-            <span className="w-1 h-full bg-[var(--foreground)] rounded-full audio-wave-bar" style={{ animationDelay: '0ms' }} />
-            <span className="w-1 h-full bg-[var(--foreground)] rounded-full audio-wave-bar" style={{ animationDelay: '100ms' }} />
-            <span className="w-1 h-full bg-[var(--foreground)] rounded-full audio-wave-bar" style={{ animationDelay: '200ms' }} />
-            <span className="w-1 h-full bg-[var(--foreground)] rounded-full audio-wave-bar" style={{ animationDelay: '300ms' }} />
-            <span className="w-1 h-full bg-[var(--foreground)] rounded-full audio-wave-bar" style={{ animationDelay: '400ms' }} />
-          </div>
+          <svg className="w-6 h-6 text-[var(--foreground)]" fill="currentColor" viewBox="0 0 24 24">
+            <rect x="6" y="4" width="4" height="16" rx="1" />
+            <rect x="14" y="4" width="4" height="16" rx="1" />
+          </svg>
         ) : (
           <svg className="w-6 h-6 text-[var(--foreground)] ml-0.5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M8 5v14l11-7z" />

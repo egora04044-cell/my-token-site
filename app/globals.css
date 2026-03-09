@@ -167,17 +167,6 @@ input[type="range"].audio-progress::-moz-range-thumb {
   font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Audio player waveform animation */
-@keyframes wave-bar {
-  0%, 100% { transform: scaleY(0.5); }
-  50% { transform: scaleY(1); }
-}
-
-.audio-wave-bar {
-  animation: wave-bar 0.8s ease-in-out infinite;
-  transform-origin: center;
-}
-
 /* Фон правой части (контент) */
 .content-area-bg {
   position: relative;

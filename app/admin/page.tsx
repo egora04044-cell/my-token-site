@@ -35,6 +35,7 @@ export default function AdminPage() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [blocked, setBlocked] = useState<string[]>([]);
   const [blockInput, setBlockInput] = useState('');
+  const [addressSearch, setAddressSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadingCoverId, setUploadingCoverId] = useState<string | null>(null);
@@ -172,7 +173,9 @@ export default function AdminPage() {
 
   const handleRenameStart = (f: UploadedFile) => {
     setRenamingId(f.id);
-    setRenameValue(f.name);
+    const ext = /\.(mp3|wav|ogg|m4a|flac)$/i;
+    const nameWithoutExt = ext.test(f.name) ? f.name.replace(ext, '') : f.name;
+    setRenameValue(nameWithoutExt);
   };
 
   const handleRenameSave = async () => {
@@ -482,13 +485,26 @@ export default function AdminPage() {
             {/* Подключённые адреса */}
             <GlassBlock className="p-6">
               <h2 className="text-xl font-semibold mb-4">Подключённые адреса Phantom ({addresses.length})</h2>
+              {addresses.length > 0 && (
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    value={addressSearch}
+                    onChange={(e) => setAddressSearch(e.target.value)}
+                    placeholder="Поиск по адресу..."
+                    className="w-full bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm font-mono"
+                  />
+                </div>
+              )}
               {addresses.length === 0 ? (
                 <p className="text-[var(--text-muted)] text-sm">
                   Адреса появятся после подключения пользователей на главной странице
                 </p>
               ) : (
                 <ul className="space-y-2">
-                  {addresses.map((a) => (
+                  {addresses
+                    .filter((a) => !addressSearch.trim() || a.address.toLowerCase().includes(addressSearch.trim().toLowerCase()))
+                    .map((a) => (
                     <li
                       key={a.address}
                       className="flex items-center justify-between py-2 border-b border-[var(--border)] last:border-0 gap-2"
@@ -510,6 +526,9 @@ export default function AdminPage() {
                     </li>
                   ))}
                 </ul>
+              )}
+              {addresses.length > 0 && addressSearch.trim() && addresses.filter((a) => a.address.toLowerCase().includes(addressSearch.trim().toLowerCase())).length === 0 && (
+                <p className="text-[var(--text-muted)] text-sm mt-2">Ничего не найдено</p>
               )}
             </GlassBlock>
           </>

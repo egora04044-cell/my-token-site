@@ -125,18 +125,13 @@ export async function deleteUploadedFile(id: string): Promise<boolean> {
   return true;
 }
 
-const AUDIO_EXT = /\.(mp3|wav|ogg|m4a|flac)$/i;
-
 export async function renameUploadedFile(id: string, newName: string): Promise<UploadedFile | null> {
   const files = await readFilesMeta();
   const index = files.findIndex((f) => f.id === id);
   if (index === -1) return null;
   const trimmed = newName.trim();
   if (!trimmed) return null;
-  const file = files[index];
-  const ext = path.extname(file.path);
-  const finalName = AUDIO_EXT.test(ext) && !AUDIO_EXT.test(trimmed) ? `${trimmed}${ext}` : trimmed;
-  files[index] = { ...file, name: finalName };
+  files[index] = { ...files[index], name: trimmed };
   await writeFilesMeta(files);
   return files[index];
 }

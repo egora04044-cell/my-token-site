@@ -9,6 +9,7 @@ import AudioPlayer from './AudioPlayer';
 import SecureFileLink from './SecureFileLink';
 import ThemeToggle from './ThemeToggle';
 import ContentBackground from './ContentBackground';
+import FavoriteButton from './FavoriteButton';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 const REQUIRED_TOKEN_MINT = new PublicKey("9AB5cgUf1r1iUU2MfYyzm3YujXpdyS1JQVqRSkxbpump");
@@ -21,6 +22,7 @@ interface UploadedFile {
     size: number;
     uploadedAt: string;
     category?: 'tracks' | 'videos' | 'community' | 'tickets' | 'other';
+    coverPath?: string;
 }
 
 export default function TokenGatedContent() {
@@ -169,6 +171,7 @@ export default function TokenGatedContent() {
     const [isMuted, setIsMuted] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [activeSection, setActiveSection] = useState('projects');
+    const [favorites, setFavorites] = useState<string[]>([]);
     useEffect(() => {
         const check = () => {
             const ua = navigator.userAgent;
@@ -182,6 +185,7 @@ export default function TokenGatedContent() {
 
     const navItems = [
         { id: 'projects', label: 'Проекты' },
+        { id: 'favorites', label: 'Избранное' },
         { id: 'about', label: 'О нас' },
         { id: 'contact', label: 'Контакты' },
     ];
@@ -192,8 +196,34 @@ export default function TokenGatedContent() {
     };
 
     useEffect(() => {
+        if (!hasAccess || !publicKeyStr) return;
+        fetch(`/api/favorites?address=${encodeURIComponent(publicKeyStr)}`)
+            .then((r) => r.ok ? r.json() : [])
+            .then((list) => { if (mountedRef.current) setFavorites(Array.isArray(list) ? list : []); })
+            .catch(() => {});
+    }, [hasAccess, publicKeyStr]);
+
+    const toggleFavorite = async (path: string) => {
+        if (!publicKeyStr) return;
+        const isFav = favorites.includes(path);
+        try {
+            const res = await fetch('/api/favorites', {
+                method: isFav ? 'DELETE' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ address: publicKeyStr, path }),
+            });
+            if (res.ok) {
+                const list = await res.json();
+                setFavorites(Array.isArray(list) ? list : []);
+            }
+        } catch {
+            // ignore
+        }
+    };
+
+    useEffect(() => {
         if (!connected || !hasAccess) return;
-        const ids = ['projects', 'about', 'contact'];
+        const ids = ['projects', 'favorites', 'about', 'contact'];
         const handleScroll = () => {
             const scrollY = window.scrollY + 150;
             for (let i = ids.length - 1; i >= 0; i--) {
@@ -442,7 +472,12 @@ export default function TokenGatedContent() {
                                             <div className="grid gap-3">
                                                 {uploadedFiles.filter(isTrack).map((f) =>
                                                     fileAccess[f.path] ? (
-                                                        <AudioPlayer key={f.id} id={f.id} path={f.path} token={fileAccess[f.path].token} address={fileAccess[f.path].address} name={f.name} coverPath={f.coverPath} playingId={playingId} onPlay={setPlayingId} volume={volume} isMuted={isMuted} />
+                                                        <div key={f.id} className="relative group/card">
+                                                            <AudioPlayer id={f.id} path={f.path} token={fileAccess[f.path].token} address={fileAccess[f.path].address} name={f.name} coverPath={f.coverPath} playingId={playingId} onPlay={setPlayingId} volume={volume} isMuted={isMuted} />
+                                                            <div className="absolute top-2 right-2 z-10 opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100 transition-opacity">
+                                                                <FavoriteButton isFavorite={favorites.includes(f.path)} onToggle={() => toggleFavorite(f.path)} />
+                                                            </div>
+                                                        </div>
                                                     ) : (
                                                         <div key={f.id} className="flex items-center gap-4 p-4 bg-[var(--bg-secondary)]/60 backdrop-blur-md rounded-lg animate-pulse">
                                                             <div className="w-10 h-10 rounded bg-[var(--border)]" />
@@ -458,7 +493,12 @@ export default function TokenGatedContent() {
                                             <h2 className="text-lg font-medium text-[var(--foreground)] mb-4">Другие файлы</h2>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                                 {uploadedFiles.filter((f) => !isTrack(f)).map((f) => (
-                                                    <SecureFileLink key={f.id} path={f.path} access={fileAccess[f.path]} name={f.name} size={f.size} />
+                                                    <div key={f.id} className="relative group/card">
+                                                        <SecureFileLink path={f.path} access={fileAccess[f.path]} name={f.name} size={f.size} />
+                                                        <div className="absolute top-2 right-2 z-10 opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100 transition-opacity">
+                                                            <FavoriteButton isFavorite={favorites.includes(f.path)} onToggle={() => toggleFavorite(f.path)} />
+                                                        </div>
+                                                    </div>
                                                 ))}
                                             </div>
                                         </div>
@@ -468,6 +508,53 @@ export default function TokenGatedContent() {
                                 <p className="text-[var(--text-secondary)]">Контент появится здесь. Админ загружает файлы в панели управления.</p>
                             )}
                         </div>
+                        </section>
+
+                        <section id="favorites" className="min-h-screen px-6 py-16 lg:py-24 border-t border-[var(--border)]">
+                            <h1 className="font-display text-[clamp(1.75rem,3vw,2.25rem)] font-semibold text-[var(--foreground)] mb-2">
+                                Избранное
+                            </h1>
+                            <p className="text-[var(--text-secondary)] mb-12">Контент, добавленный в избранное</p>
+                            <div className="p-8 bg-[var(--bg-card)]/60 backdrop-blur-xl border border-[var(--border)]/60 rounded-lg">
+                                {favorites.length === 0 ? (
+                                    <p className="text-[var(--text-secondary)]">Добавьте контент в избранное, нажав на сердечко при наведении</p>
+                                ) : (
+                                    <div className="space-y-10">
+                                        {uploadedFiles.filter(isTrack).filter((f) => favorites.includes(f.path)).length > 0 && (
+                                            <div>
+                                                <h2 className="text-lg font-medium text-[var(--foreground)] mb-4">Треки</h2>
+                                                <div className="grid gap-3">
+                                                    {uploadedFiles.filter(isTrack).filter((f) => favorites.includes(f.path)).map((f) =>
+                                                        fileAccess[f.path] ? (
+                                                            <div key={f.id} className="relative group/card">
+                                                                <AudioPlayer id={f.id} path={f.path} token={fileAccess[f.path].token} address={fileAccess[f.path].address} name={f.name} coverPath={f.coverPath} playingId={playingId} onPlay={setPlayingId} volume={volume} isMuted={isMuted} />
+                                                                <div className="absolute top-2 right-2 z-10">
+                                                                    <FavoriteButton isFavorite={true} onToggle={() => toggleFavorite(f.path)} />
+                                                                </div>
+                                                            </div>
+                                                        ) : null
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {uploadedFiles.filter((f) => !isTrack(f)).filter((f) => favorites.includes(f.path)).length > 0 && (
+                                            <div>
+                                                <h2 className="text-lg font-medium text-[var(--foreground)] mb-4">Другие файлы</h2>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    {uploadedFiles.filter((f) => !isTrack(f)).filter((f) => favorites.includes(f.path)).map((f) => (
+                                                        <div key={f.id} className="relative group/card">
+                                                            <SecureFileLink path={f.path} access={fileAccess[f.path]} name={f.name} size={f.size} />
+                                                            <div className="absolute top-2 right-2 z-10">
+                                                                <FavoriteButton isFavorite={true} onToggle={() => toggleFavorite(f.path)} />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </section>
 
                         <section id="about" className="min-h-screen px-6 py-16 lg:py-24 border-t border-[var(--border)]">
