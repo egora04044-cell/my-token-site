@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 
-const TokenGatedContent = dynamic(() => import('./components/TokenGatedContent'), {
+const TokenGatedContent = dynamic(() => import('../components/TokenGatedContent'), {
   ssr: false,
   loading: () => (
     <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
@@ -11,6 +11,6 @@ const TokenGatedContent = dynamic(() => import('./components/TokenGatedContent')
   ),
 });
 
-export default function Home() {
-  return <TokenGatedContent mode="gate" />;
+export default function ExclusivePage() {
+  return <TokenGatedContent mode="content" />;
 }

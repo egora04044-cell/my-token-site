@@ -3,6 +3,8 @@
 import { useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { isAdmin } from '@/lib/admin';
 import { usePhantomMobile } from '@/lib/phantom-mobile';
 import AudioPlayer from './AudioPlayer';
@@ -25,7 +27,10 @@ interface UploadedFile {
     coverPath?: string;
 }
 
-export default function TokenGatedContent() {
+type PageMode = 'gate' | 'content';
+
+export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }) {
+    const router = useRouter();
     const { publicKey: adapterPublicKey, connected: adapterConnected } = useWallet();
     const { connected: phantomConnected, publicKey: phantomPublicKey, connectPhantom, connectWithGoogle, connectWithApple, disconnect: phantomDisconnect, hasDeeplinkSupport, isPhantomInAppBrowser } = usePhantomMobile();
 
@@ -222,6 +227,12 @@ export default function TokenGatedContent() {
     };
 
     useEffect(() => {
+        if (mode === 'content' && (!connected || !hasAccess || isBlocked) && !loading) {
+            router.replace('/');
+        }
+    }, [mode, connected, hasAccess, isBlocked, loading, router]);
+
+    useEffect(() => {
         if (!connected || !hasAccess) return;
         const ids = ['projects', 'favorites', 'about', 'contact'];
         const handleScroll = () => {
@@ -241,14 +252,17 @@ export default function TokenGatedContent() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, [connected, hasAccess]);
 
+    const showGate = mode === 'gate' && (!connected || loading || !hasAccess || isBlocked);
+    const showContent = mode === 'content' && connected && hasAccess && !loading && !isBlocked;
+
     return (
         <div className="min-h-screen">
-            {/* Gate Screen */}
-            {(!connected || loading || !hasAccess || isBlocked) && (
+            {/* Gate Screen — главная страница */}
+            {showGate && (
                 <main className="min-h-screen flex flex-col content-area-bg gate-screen-bg">
                     <ContentBackground />
                     <nav className="w-full max-w-[1200px] mx-auto px-6 py-6 flex items-center justify-between opacity-0 animate-fade-in-up">
-                        <a href="/" className="font-display text-sm font-semibold text-[var(--foreground)] tracking-tight">ARTIST</a>
+                        <Link href="/" className="font-display text-sm font-semibold text-[var(--foreground)] tracking-tight">ARTIST</Link>
                         <div className="flex items-center gap-4">
                             {connected && isAdmin(publicKey?.toString()) && (
                                 <a href="/admin" className="text-sm text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors">
@@ -349,7 +363,14 @@ export default function TokenGatedContent() {
                                         <WalletMultiButton className="!rounded-lg" />
                                     )}
                                 </div>
-                            ) : null}
+                            ) : (
+                                <Link
+                                    href="/exclusive"
+                                    className="flex items-center justify-center gap-3 w-full px-8 py-4 bg-[var(--foreground)] text-[var(--background)] font-semibold rounded-lg hover:opacity-90 transition-opacity"
+                                >
+                                    Вход
+                                </Link>
+                            )}
                         </div>
                     </section>
 
@@ -374,7 +395,7 @@ export default function TokenGatedContent() {
                     {/* Left sidebar navigation — как на Framer */}
                     <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-48 lg:w-56 xl:w-64 border-r border-[var(--border)] bg-[var(--background)] z-20">
                         <div className="p-6 pb-4">
-                            <a href="/" className="font-display text-sm font-semibold text-[var(--foreground)] tracking-tight">ARTIST</a>
+                            <Link href="/" className="font-display text-sm font-semibold text-[var(--foreground)] tracking-tight">ARTIST</Link>
                         </div>
                         <nav className="flex-1 px-6 py-4 space-y-1">
                             {navItems.map((item) => (
@@ -417,7 +438,7 @@ export default function TokenGatedContent() {
 
                     {/* Mobile top bar */}
                     <div className="lg:hidden fixed top-0 left-0 right-0 z-20 bg-[var(--background)] border-b border-[var(--border)] px-4 py-3 flex items-center justify-between">
-                        <a href="/" className="font-display text-sm font-semibold">ARTIST</a>
+                        <Link href="/" className="font-display text-sm font-semibold">ARTIST</Link>
                         <div className="flex items-center gap-3">
                             <nav className="flex gap-2">
                                 {navItems.map((item) => (
