@@ -245,7 +245,8 @@ export default function TokenGatedContent() {
         <div className="min-h-screen">
             {/* Gate Screen */}
             {(!connected || loading || !hasAccess || isBlocked) && (
-                <main className="min-h-screen flex flex-col">
+                <main className="min-h-screen flex flex-col content-area-bg gate-screen-bg">
+                    <ContentBackground />
                     <nav className="w-full max-w-[1200px] mx-auto px-6 py-6 flex items-center justify-between opacity-0 animate-fade-in-up">
                         <a href="/" className="font-display text-sm font-semibold text-[var(--foreground)] tracking-tight">ARTIST</a>
                         <div className="flex items-center gap-4">
@@ -472,12 +473,7 @@ export default function TokenGatedContent() {
                                             <div className="grid gap-3">
                                                 {uploadedFiles.filter(isTrack).map((f) =>
                                                     fileAccess[f.path] ? (
-                                                        <div key={f.id} className="relative group/card">
-                                                            <AudioPlayer id={f.id} path={f.path} token={fileAccess[f.path].token} address={fileAccess[f.path].address} name={f.name} coverPath={f.coverPath} playingId={playingId} onPlay={setPlayingId} volume={volume} isMuted={isMuted} />
-                                                            <div className="absolute top-2 right-2 z-10 opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100 transition-opacity">
-                                                                <FavoriteButton isFavorite={favorites.includes(f.path)} onToggle={() => toggleFavorite(f.path)} />
-                                                            </div>
-                                                        </div>
+                                                        <AudioPlayer key={f.id} id={f.id} path={f.path} token={fileAccess[f.path].token} address={fileAccess[f.path].address} name={f.name} coverPath={f.coverPath} playingId={playingId} onPlay={setPlayingId} volume={volume} isMuted={isMuted} isFavorite={favorites.includes(f.path)} onToggleFavorite={() => toggleFavorite(f.path)} />
                                                     ) : (
                                                         <div key={f.id} className="flex items-center gap-4 p-4 bg-[var(--bg-secondary)]/60 backdrop-blur-md rounded-lg animate-pulse">
                                                             <div className="w-10 h-10 rounded bg-[var(--border)]" />
@@ -526,12 +522,7 @@ export default function TokenGatedContent() {
                                                 <div className="grid gap-3">
                                                     {uploadedFiles.filter(isTrack).filter((f) => favorites.includes(f.path)).map((f) =>
                                                         fileAccess[f.path] ? (
-                                                            <div key={f.id} className="relative group/card">
-                                                                <AudioPlayer id={f.id} path={f.path} token={fileAccess[f.path].token} address={fileAccess[f.path].address} name={f.name} coverPath={f.coverPath} playingId={playingId} onPlay={setPlayingId} volume={volume} isMuted={isMuted} />
-                                                                <div className="absolute top-2 right-2 z-10">
-                                                                    <FavoriteButton isFavorite={true} onToggle={() => toggleFavorite(f.path)} />
-                                                                </div>
-                                                            </div>
+                                                            <AudioPlayer key={f.id} id={f.id} path={f.path} token={fileAccess[f.path].token} address={fileAccess[f.path].address} name={f.name} coverPath={f.coverPath} playingId={playingId} onPlay={setPlayingId} volume={volume} isMuted={isMuted} isFavorite={true} onToggleFavorite={() => toggleFavorite(f.path)} />
                                                         ) : null
                                                     )}
                                                 </div>
