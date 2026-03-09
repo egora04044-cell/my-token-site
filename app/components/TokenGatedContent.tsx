@@ -1,8 +1,6 @@
 'use client';
 
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useConnection } from '@solana/wallet-adapter-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { PublicKey } from '@solana/web3.js';
 import { useState, useEffect, useRef } from 'react';
 import { isAdmin } from '@/lib/admin';
@@ -10,6 +8,8 @@ import { usePhantomMobile } from '@/lib/phantom-mobile';
 import AudioPlayer from './AudioPlayer';
 import SecureFileLink from './SecureFileLink';
 import ThemeToggle from './ThemeToggle';
+import ContentBackground from './ContentBackground';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 const REQUIRED_TOKEN_MINT = new PublicKey("9AB5cgUf1r1iUU2MfYyzm3YujXpdyS1JQVqRSkxbpump");
 const REQUIRED_AMOUNT = 1000;
@@ -25,7 +25,6 @@ interface UploadedFile {
 
 export default function TokenGatedContent() {
     const { publicKey: adapterPublicKey, connected: adapterConnected } = useWallet();
-    const { connection } = useConnection();
     const { connected: phantomConnected, publicKey: phantomPublicKey, connectPhantom, connectWithGoogle, connectWithApple, disconnect: phantomDisconnect, hasDeeplinkSupport, isPhantomInAppBrowser } = usePhantomMobile();
 
     const usePhantomMobileConnection = hasDeeplinkSupport && phantomConnected;
@@ -38,66 +37,59 @@ export default function TokenGatedContent() {
     const [isBlocked, setIsBlocked] = useState(false);
 
     const mountedRef = useRef(true);
+    const checkingRef = useRef(false);
     useEffect(() => () => { mountedRef.current = false; }, []);
 
-    const checkTokenBalance = async (retryCount = 0) => {
-        if (!publicKey || !connection) return;
-        if (retryCount === 0) setLoading(true);
-        setIsBlocked(false);
-        let done = false;
-        try {
-            const blockedRes = await fetch('/api/check-blocked', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ address: publicKey.toString() }),
-            });
-            const blockedData = await blockedRes.json();
-            if (!mountedRef.current) return;
-            if (blockedData.blocked) {
-                setTokenBalance(0);
-                setHasAccess(false);
-                setIsBlocked(true);
-                setLoading(false);
-                return;
-            }
+    const isLocalhost = typeof window !== 'undefined' && /localhost|127\.0\.0\.1/.test(window.location.hostname);
+    const devAccess = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('dev_access') === '1';
 
-            const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
-                publicKey,
-                { mint: REQUIRED_TOKEN_MINT }
+    const checkTokenBalance = async () => {
+        if (checkingRef.current || !publicKey) return;
+        checkingRef.current = true;
+        setLoading(true);
+        setIsBlocked(false);
+        const timeoutMs = isLocalhost ? 5000 : 8000;
+        const withTimeout = <T,>(p: Promise<T>) =>
+            Promise.race([p, new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeoutMs))]);
+
+        try {
+            const res = await withTimeout(
+                fetch('/api/check-balance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: publicKey.toString() }),
+                })
             );
+            const data = await res.json();
             if (!mountedRef.current) return;
-            if (tokenAccounts.value.length > 0) {
-                const balance = tokenAccounts.value[0].account.data.parsed.info.tokenAmount.uiAmount;
-                setTokenBalance(balance);
-                setHasAccess(balance >= REQUIRED_AMOUNT);
-                done = true;
-            } else {
-                setTokenBalance(0);
-                setHasAccess(false);
-                if (retryCount < 2 && mountedRef.current) {
-                    setTimeout(() => checkTokenBalance(retryCount + 1), 2000 + retryCount * 2000);
-                } else {
-                    done = true;
-                }
-            }
+            setTokenBalance(data.balance ?? 0);
+            setHasAccess(data.hasAccess ?? false);
+            setIsBlocked(data.blocked ?? false);
         } catch (error) {
             if (mountedRef.current) {
                 console.error('Ошибка при проверке баланса:', error);
                 setTokenBalance(0);
                 setHasAccess(false);
-                if (retryCount < 2) {
-                    setTimeout(() => checkTokenBalance(retryCount + 1), 2000 + retryCount * 2000);
-                } else {
-                    done = true;
-                }
             }
         } finally {
-            if (mountedRef.current && done) setLoading(false);
+            if (mountedRef.current) {
+                setLoading(false);
+                checkingRef.current = false;
+            }
         }
     };
 
+    const publicKeyStr = publicKey?.toString() ?? '';
+
     useEffect(() => {
-        if (connected && publicKey && connection) {
+        if (connected && publicKeyStr) {
+            if (isLocalhost && devAccess) {
+                setLoading(false);
+                setTokenBalance(9999);
+                setHasAccess(true);
+                setIsBlocked(false);
+                return;
+            }
             const fromAuth = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('phantom_connected') === '1';
             const delay = fromAuth ? 1500 : 0;
             const t = setTimeout(() => {
@@ -105,7 +97,7 @@ export default function TokenGatedContent() {
                 fetch('/api/connect', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ address: publicKey.toString() }),
+                    body: JSON.stringify({ address: publicKeyStr }),
                 }).catch(() => {});
             }, delay);
             return () => clearTimeout(t);
@@ -114,7 +106,19 @@ export default function TokenGatedContent() {
             setHasAccess(false);
             setIsBlocked(false);
         }
-    }, [connected, publicKey, connection]);
+    }, [connected, publicKeyStr]);
+
+    useEffect(() => {
+        if (!loading) return;
+        const failsafeMs = isLocalhost ? 6000 : 10000;
+        const t = setTimeout(() => {
+            if (mountedRef.current) {
+                setLoading(false);
+                checkingRef.current = false;
+            }
+        }, failsafeMs);
+        return () => clearTimeout(t);
+    }, [loading]);
 
     useEffect(() => {
         if (hasAccess) {
@@ -320,6 +324,11 @@ export default function TokenGatedContent() {
 
                     <footer className="py-12 flex flex-col items-center gap-4 opacity-0 animate-fade-in-up animate-delay-400">
                         <p className="text-xs text-[var(--text-muted)]">Phantom Wallet · {REQUIRED_AMOUNT}+ токенов · Solana</p>
+                        {typeof window !== 'undefined' && /localhost|127\.0\.0\.1/.test(window.location.hostname) && (
+                            <p className="text-xs text-[var(--text-muted)]/70">
+                                Локалка: добавьте <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded">?dev_access=1</code> к URL для теста без проверки баланса
+                            </p>
+                        )}
                         <p className="text-xs text-[var(--text-muted)]/70">Прокрутите вниз</p>
                         <svg className="w-5 h-5 text-[var(--text-muted)]/50 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
@@ -398,11 +407,7 @@ export default function TokenGatedContent() {
 
                     {/* Main content — scrollable */}
                     <div className="content-area-bg flex-1 lg:pl-48 xl:pl-64 min-h-screen pt-16 lg:pt-0">
-                        <div className="gradient-mesh" aria-hidden="true">
-                            <div className="gradient-orb" />
-                            <div className="gradient-orb" />
-                            <div className="gradient-orb" />
-                        </div>
+                        <ContentBackground />
                         <section id="projects" className="min-h-screen px-6 py-16 lg:py-24">
                             <h1 className="font-display text-[clamp(1.75rem,3vw,2.25rem)] font-semibold text-[var(--foreground)] mb-2">
                                 Проекты
