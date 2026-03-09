@@ -1,16 +1,17 @@
 'use client';
 
-import dynamic from 'next/dynamic';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-const TokenGatedContent = dynamic(() => import('../components/TokenGatedContent'), {
-  ssr: false,
-  loading: () => (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
-      <div className="animate-pulse text-[var(--text-muted)]">Загрузка...</div>
+export default function ExclusiveMainPage() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/exclusive/projects');
+  }, [router]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-pulse text-[var(--text-muted)]">Переход...</div>
     </div>
-  ),
-});
-
-export default function ExclusivePage() {
-  return <TokenGatedContent mode="content" />;
+  );
 }
