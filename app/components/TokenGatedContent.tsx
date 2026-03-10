@@ -232,6 +232,13 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
         }
     }, [mode, connected, hasAccess, isBlocked, loading, router]);
 
+    // При доступе на главной — сразу на /exclusive (отдельные страницы)
+    useEffect(() => {
+        if (mode === 'gate' && connected && hasAccess && !loading && !isBlocked) {
+            router.replace('/exclusive');
+        }
+    }, [mode, connected, hasAccess, isBlocked, loading, router]);
+
     useEffect(() => {
         if (!connected || !hasAccess) return;
         const ids = ['projects', 'favorites', 'about', 'contact'];
@@ -389,8 +396,8 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                 </main>
             )}
 
-            {/* Content Screen */}
-            {connected && hasAccess && !loading && !isBlocked && (
+            {/* Content Screen — только на /exclusive, на главной редирект */}
+            {showContent && (
                 <main className="min-h-screen flex">
                     {/* Left sidebar navigation — как на Framer */}
                     <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-48 lg:w-56 xl:w-64 border-r border-[var(--border)] bg-[var(--background)] z-20">

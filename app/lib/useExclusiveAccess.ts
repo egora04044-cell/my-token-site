@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { usePhantomMobile } from '@/lib/phantom-mobile';
 
 export function useExclusiveAccess() {
-  const { publicKey: adapterPublicKey, connected: adapterConnected } = useWallet();
+  const { publicKey: adapterPublicKey, connected: adapterConnected, connecting: adapterConnecting } = useWallet();
   const { connected: phantomConnected, publicKey: phantomPublicKey, disconnect: phantomDisconnect, hasDeeplinkSupport, isPhantomInAppBrowser } = usePhantomMobile();
 
   const usePhantomMobileConnection = hasDeeplinkSupport && phantomConnected;
@@ -95,6 +95,7 @@ export function useExclusiveAccess() {
     hasAccess,
     loading,
     isBlocked,
+    connecting: adapterConnecting,
     tokenBalance,
     usePhantomMobileConnection,
     phantomDisconnect,
