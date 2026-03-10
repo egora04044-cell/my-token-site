@@ -3,7 +3,7 @@
 import { useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { isAdmin } from '@/lib/admin';
 import { usePhantomMobile } from '@/lib/phantom-mobile';
@@ -31,6 +31,7 @@ type PageMode = 'gate' | 'content';
 
 export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }) {
     const router = useRouter();
+    const pathname = usePathname();
     const { publicKey: adapterPublicKey, connected: adapterConnected } = useWallet();
     const { connected: phantomConnected, publicKey: phantomPublicKey, connectPhantom, connectWithGoogle, connectWithApple, disconnect: phantomDisconnect, hasDeeplinkSupport, isPhantomInAppBrowser } = usePhantomMobile();
 
@@ -232,12 +233,12 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
         }
     }, [mode, connected, hasAccess, isBlocked, loading, router]);
 
-    // При доступе на главной — сразу на /exclusive (отдельные страницы)
+    // При доступе на главной — сразу на /exclusive (URL должен показывать /exclusive)
     useEffect(() => {
-        if (mode === 'gate' && connected && hasAccess && !loading && !isBlocked) {
+        if (mode === 'gate' && connected && hasAccess && !loading && !isBlocked && pathname === '/') {
             router.replace('/exclusive');
         }
-    }, [mode, connected, hasAccess, isBlocked, loading, router]);
+    }, [mode, connected, hasAccess, isBlocked, loading, pathname, router]);
 
     useEffect(() => {
         if (!connected || !hasAccess) return;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useExclusiveAccess } from '@/app/lib/useExclusiveAccess';
 import { isAdmin } from '@/lib/admin';
@@ -23,6 +23,7 @@ export default function ExclusiveLayoutClient({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [activeSection, setActiveSection] = useState('projects');
   const {
     connected,
@@ -87,6 +88,19 @@ export default function ExclusiveLayoutClient({
             <Link href="/" className="font-display text-sm font-semibold text-[var(--foreground)] tracking-tight">
               ARTIST
             </Link>
+            {pathname === '/exclusive' && (
+              <a
+                href="/exclusive"
+                className="block mt-2 text-xs text-[var(--text-muted)] hover:text-[var(--foreground)] truncate"
+                title="Скопировать ссылку"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigator.clipboard?.writeText(typeof window !== 'undefined' ? window.location.origin + '/exclusive' : '/exclusive');
+                }}
+              >
+                /exclusive
+              </a>
+            )}
           </div>
           <nav className="flex-1 px-6 py-4 space-y-1">
             {navItems.map((item) => (
