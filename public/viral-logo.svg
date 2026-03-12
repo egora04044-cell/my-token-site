@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 70" fill="none">
+  <defs>
+    <linearGradient id="viral-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="30%" stop-color="#fafafa"/>
+      <stop offset="70%" stop-color="#f0f0f0"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+    <filter id="viral-3d" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="1" stdDeviation="0" flood-color="#ccc" flood-opacity="0.4"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="1" flood-color="#999" flood-opacity="0.2"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="2" flood-color="#666" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  <text x="110" y="48" text-anchor="middle" font-family="'Space Grotesk', system-ui, sans-serif" font-weight="700" font-size="48" letter-spacing="0.02em" fill="url(#viral-grad)" filter="url(#viral-3d)">VIRAL</text>
+</svg>

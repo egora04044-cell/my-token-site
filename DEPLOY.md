@@ -95,6 +95,25 @@ pm2 restart nextuplabel
 
 ---
 
+## Поддомен exclusive.nextuplabel.online
+
+Поддомен ведёт на страницу эксклюзивного контента:
+
+1. **DNS** — добавьте A-запись:
+   - Имя: `exclusive`
+   - Значение: IP вашего сервера (тот же, что у nextuplabel.online)
+
+2. **Nginx** — уже включён в `nginx.conf.example` (server_name)
+
+3. **SSL** — Certbot автоматически добавит поддомен в сертификат:
+   ```bash
+   sudo certbot --nginx -d nextuplabel.online -d www.nextuplabel.online -d exclusive.nextuplabel.online
+   ```
+
+При переходе на `exclusive.nextuplabel.online` пользователь автоматически перенаправляется на `/exclusive`.
+
+---
+
 ## Важные моменты
 
 1. **Порт 3000** — Next.js по умолчанию слушает 3000. В `ecosystem.config.cjs` можно изменить `PORT`.

@@ -44,7 +44,12 @@ export default function ExclusiveLayoutClient({
   const isInitializing = connecting || loading;
   useEffect(() => {
     if ((!connected || !hasAccess || isBlocked) && !isInitializing) {
-      router.replace('/');
+      // На поддомене exclusive — редирект на основной домен, иначе зацикливание
+      if (typeof window !== 'undefined' && window.location.hostname === 'exclusive.nextuplabel.online') {
+        window.location.href = 'https://nextuplabel.online/';
+      } else {
+        router.replace('/');
+      }
     }
   }, [connected, hasAccess, isBlocked, isInitializing, router]);
 

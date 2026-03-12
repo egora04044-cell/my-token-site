@@ -3,14 +3,14 @@
 
 server {
     listen 80;
-    server_name nextuplabel.online www.nextuplabel.online;
+    server_name nextuplabel.online www.nextuplabel.online exclusive.nextuplabel.online;
 
     # Redirect HTTP to HTTPS (uncomment if using SSL)
     # return 301 https://$server_name$request_uri;
     # }
     # server {
     # listen 443 ssl http2;
-    # server_name nextuplabel.online www.nextuplabel.online;
+    # server_name nextuplabel.online www.nextuplabel.online exclusive.nextuplabel.online;
     # ssl_certificate /path/to/fullchain.pem;
     # ssl_certificate_key /path/to/privkey.pem;
 
