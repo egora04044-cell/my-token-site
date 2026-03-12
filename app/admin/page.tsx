@@ -5,6 +5,7 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ADMIN_ADDRESSES, isAdmin } from '@/lib/admin';
 import GlassBlock from '@/app/components/GlassBlock';
 import ThemeToggle from '@/app/components/ThemeToggle';
@@ -259,6 +260,11 @@ export default function AdminPage() {
   if (!connected) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6">
+        <header className="fixed top-0 left-0 right-0 z-10 px-6 py-4 border-b border-[var(--border)] bg-[var(--background)]">
+          <Link href="/" className="flex items-center">
+            <Image src="/0_3-8714b874-d448-4052-afb0-db79e77b2598.png" alt="VIRAL" width={120} height={67} className="h-16 w-auto rounded-xl" priority />
+          </Link>
+        </header>
         <div className="max-w-md w-full text-center">
           <h1 className="font-serif text-3xl mb-4">Панель администратора</h1>
           <p className="text-[var(--text-secondary)] mb-8">
@@ -277,6 +283,9 @@ export default function AdminPage() {
     <div className="min-h-screen px-6 py-8">
       <header className="max-w-4xl mx-auto flex items-center justify-between mb-12 pb-6 border-b border-[var(--border)]">
         <div className="flex items-center gap-4">
+          <Link href="/" className="flex items-center">
+            <Image src="/0_3-8714b874-d448-4052-afb0-db79e77b2598.png" alt="VIRAL" width={120} height={67} className="h-16 w-auto rounded-xl" priority />
+          </Link>
           <Link href="/" className="text-[var(--text-muted)] hover:text-[var(--foreground)] text-sm">
             ← Главная
           </Link>
