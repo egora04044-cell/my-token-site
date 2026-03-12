@@ -2,7 +2,6 @@
 
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { isAdmin } from '@/lib/admin';
@@ -16,8 +15,6 @@ const REQUIRED_AMOUNT = 1000;
 type PageMode = 'gate' | 'content';
 
 export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }) {
-    const router = useRouter();
-    const pathname = usePathname();
     const { publicKey: adapterPublicKey, connected: adapterConnected } = useWallet();
     const { connected: phantomConnected, publicKey: phantomPublicKey, connectPhantom, connectWithGoogle, connectWithApple, disconnect: phantomDisconnect, hasDeeplinkSupport, isPhantomInAppBrowser } = usePhantomMobile();
 
@@ -127,13 +124,6 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
         return () => window.removeEventListener('resize', check);
     }, []);
 
-    // При доступе на главной — автоматический редирект на /exclusive
-    useEffect(() => {
-        if (mode === 'gate' && connected && hasAccess && !loading && !isBlocked && pathname === '/') {
-            router.replace('/exclusive');
-        }
-    }, [mode, connected, hasAccess, isBlocked, loading, pathname, router]);
-
     const showGate = mode === 'gate';
 
     return (
@@ -144,7 +134,7 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                     <ContentBackground />
                     <nav className="w-full max-w-[1200px] mx-auto px-6 py-6 flex items-center justify-between opacity-0 animate-fade-in-up">
                         <Link href="/" className="flex items-center">
-                            <Image src="/viral-logo.svg" alt="VIRAL" width={120} height={42} className="h-10 w-auto" priority />
+                            <Image src="/viral-logo.png" alt="VIRAL" width={240} height={134} className="h-10 w-auto" priority />
                         </Link>
                         <div className="flex items-center gap-6">
                             <a href="#about" className="hidden sm:block text-sm text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors">
@@ -256,13 +246,13 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                                     )}
                                 </div>
                             ) : (
-                                <div className="p-8 text-center border border-[var(--border)] rounded-xl bg-[var(--bg-card)]/60 backdrop-blur-xl">
-                                    <p className="text-[var(--text-muted)] text-sm mb-3">Перенаправление...</p>
+                                <div className="p-8 text-center border border-[var(--border)]/60 rounded-xl bg-[var(--bg-card)]/60 backdrop-blur-xl">
+                                    <p className="text-[var(--foreground)] font-medium mb-6">Доступ получен</p>
                                     <Link
                                         href="/exclusive"
-                                        className="inline-block px-6 py-3 bg-[var(--foreground)] text-[var(--background)] font-medium rounded-xl hover:opacity-90 transition-opacity"
+                                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[var(--foreground)]/80 backdrop-blur-sm text-[var(--background)] font-semibold rounded-xl hover:bg-[var(--foreground)]/90 transition-colors border border-[var(--border)]/40"
                                     >
-                                        Перейти в эксклюзив
+                                        Вход
                                     </Link>
                                 </div>
                             )}
