@@ -11,10 +11,10 @@ import { ExclusiveProvider } from './ExclusiveProvider';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 const navItems = [
-  { id: 'projects', label: 'Проекты' },
-  { id: 'favorites', label: 'Избранное' },
-  { id: 'about', label: 'О нас' },
-  { id: 'contact', label: 'Контакты' },
+  { href: '/projects', label: 'Проекты' },
+  { href: '/favorite', label: 'Избранное' },
+  { href: '/about', label: 'О нас' },
+  { href: '/contacts', label: 'Контакты' },
 ];
 
 export default function ExclusiveLayoutClient({
@@ -24,7 +24,6 @@ export default function ExclusiveLayoutClient({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [activeSection, setActiveSection] = useState('projects');
   const {
     connected,
     publicKey,
@@ -44,38 +43,9 @@ export default function ExclusiveLayoutClient({
   const isInitializing = connecting || loading;
   useEffect(() => {
     if ((!connected || !hasAccess || isBlocked) && !isInitializing) {
-      // На поддомене exclusive — редирект на основной домен, иначе зацикливание
-      if (typeof window !== 'undefined' && window.location.hostname === 'exclusive.nextuplabel.online') {
-        window.location.href = 'https://nextuplabel.online/';
-      } else {
-        router.replace('/');
-      }
+      router.replace('/');
     }
   }, [connected, hasAccess, isBlocked, isInitializing, router]);
-
-  const scrollToSection = (id: string) => {
-    setActiveSection(id);
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    const ids = ['projects', 'favorites', 'about', 'contact'];
-    const handleScroll = () => {
-      const scrollY = window.scrollY + 150;
-      for (let i = ids.length - 1; i >= 0; i--) {
-        const el = document.getElementById(ids[i]);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top + window.scrollY <= scrollY) {
-            setActiveSection(ids[i]);
-            break;
-          }
-        }
-      }
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   if (!connected || !hasAccess || isInitializing || isBlocked) {
     return (
@@ -91,36 +61,22 @@ export default function ExclusiveLayoutClient({
         <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-48 lg:w-56 xl:w-64 border-r border-[var(--border)] bg-[var(--background)] z-20">
           <div className="p-6 pb-4">
             <Link href="/" className="font-display text-sm font-semibold text-[var(--foreground)] tracking-tight">
-              ARTIST
+              VIRAL
             </Link>
-            {pathname === '/exclusive' && (
-              <a
-                href="/exclusive"
-                className="block mt-2 text-xs text-[var(--text-muted)] hover:text-[var(--foreground)] truncate"
-                title="Скопировать ссылку"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigator.clipboard?.writeText(typeof window !== 'undefined' ? window.location.origin + '/exclusive' : '/exclusive');
-                }}
-              >
-                /exclusive
-              </a>
-            )}
           </div>
           <nav className="flex-1 px-6 py-4 space-y-1">
             {navItems.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => scrollToSection(item.id)}
+              <Link
+                key={item.href}
+                href={item.href}
                 className={`block w-full text-left text-sm py-2 px-3 rounded-lg transition-colors ${
-                  activeSection === item.id
+                  pathname === item.href
                     ? 'text-[var(--foreground)] font-medium bg-[var(--bg-elevated)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--bg-secondary)]'
                 }`}
               >
                 {item.label}
-              </button>
+              </Link>
             ))}
           </nav>
           <div className="p-6 pt-4 border-t border-[var(--border)] space-y-3">
@@ -154,7 +110,7 @@ export default function ExclusiveLayoutClient({
 
         <div className="lg:hidden fixed top-0 left-0 right-0 z-20 bg-[var(--background)] border-b border-[var(--border)] px-4 py-3 flex items-center justify-between">
           <Link href="/" className="font-display text-sm font-semibold">
-            ARTIST
+            VIRAL
           </Link>
           <div className="flex items-center gap-3">
             <ThemeToggle />
@@ -166,16 +122,15 @@ export default function ExclusiveLayoutClient({
           <ContentBackground />
           <div className="lg:hidden px-4 py-3 flex gap-2 overflow-x-auto border-b border-[var(--border)]">
             {navItems.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => scrollToSection(item.id)}
+              <Link
+                key={item.href}
+                href={item.href}
                 className={`block flex-shrink-0 text-xs py-2 px-3 rounded-lg transition-colors ${
-                  activeSection === item.id ? 'bg-[var(--bg-elevated)] font-medium' : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
+                  pathname === item.href ? 'bg-[var(--bg-elevated)] font-medium' : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
                 }`}
               >
                 {item.label}
-              </button>
+              </Link>
             ))}
           </div>
           {children}

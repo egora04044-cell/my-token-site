@@ -1,32 +1,17 @@
 'use client';
 
 import { useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { isAdmin } from '@/lib/admin';
 import { usePhantomMobile } from '@/lib/phantom-mobile';
-import AudioPlayer from './AudioPlayer';
-import SecureFileLink from './SecureFileLink';
 import ThemeToggle from './ThemeToggle';
 import ContentBackground from './ContentBackground';
-import FavoriteButton from './FavoriteButton';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
-const REQUIRED_TOKEN_MINT = new PublicKey("9AB5cgUf1r1iUU2MfYyzm3YujXpdyS1JQVqRSkxbpump");
 const REQUIRED_AMOUNT = 1000;
-
-interface UploadedFile {
-    id: string;
-    name: string;
-    path: string;
-    size: number;
-    uploadedAt: string;
-    category?: 'tracks' | 'videos' | 'community' | 'tickets' | 'other';
-    coverPath?: string;
-}
 
 type PageMode = 'gate' | 'content';
 
@@ -42,7 +27,6 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
     const [tokenBalance, setTokenBalance] = useState<number | null>(null);
     const [hasAccess, setHasAccess] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
     const [isBlocked, setIsBlocked] = useState(false);
 
     const mountedRef = useRef(true);
@@ -129,56 +113,7 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
         return () => clearTimeout(t);
     }, [loading]);
 
-    useEffect(() => {
-        if (hasAccess) {
-            fetch('/api/files/public')
-                .then((r) => r.ok ? r.json() : [])
-                .then((data) => { if (mountedRef.current) setUploadedFiles(data); })
-                .catch(() => { if (mountedRef.current) setUploadedFiles([]); });
-        } else {
-            setUploadedFiles([]);
-            setFileAccess({});
-        }
-    }, [hasAccess]);
-
-    const [fileAccess, setFileAccess] = useState<Record<string, { token: string; address: string }>>({});
-
-    useEffect(() => {
-        if (!hasAccess || !publicKey || uploadedFiles.length === 0) return;
-        const addr = publicKey.toString();
-        const fetchTokens = async () => {
-            const access: Record<string, { token: string; address: string }> = {};
-            await Promise.all(
-                uploadedFiles.map(async (f) => {
-                    try {
-                        const res = await fetch('/api/serve-token', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ path: f.path, address: addr }),
-                        });
-                        if (res.ok) {
-                            const { token } = await res.json();
-                            access[f.path] = { token, address: addr };
-                        }
-                    } catch {
-                        // ignore
-                    }
-                })
-            );
-            if (mountedRef.current) setFileAccess((prev) => ({ ...prev, ...access }));
-        };
-        fetchTokens();
-    }, [hasAccess, publicKey, uploadedFiles]);
-
-    const shortenAddress = (addr: string) => `${addr.slice(0, 4)}...${addr.slice(-4)}`;
-    const isAudioFile = (name: string) => /\.(mp3|wav|ogg|m4a|flac)$/i.test(name);
-    const isTrack = (f: UploadedFile) => f.category === 'tracks' || isAudioFile(f.name);
-    const [playingId, setPlayingId] = useState<string | null>(null);
-    const [volume, setVolume] = useState(1);
-    const [isMuted, setIsMuted] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
-    const [activeSection, setActiveSection] = useState('projects');
-    const [favorites, setFavorites] = useState<string[]>([]);
     useEffect(() => {
         const check = () => {
             const ua = navigator.userAgent;
@@ -190,83 +125,14 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
         return () => window.removeEventListener('resize', check);
     }, []);
 
-    const navItems = [
-        { id: 'projects', label: 'Проекты' },
-        { id: 'favorites', label: 'Избранное' },
-        { id: 'about', label: 'О нас' },
-        { id: 'contact', label: 'Контакты' },
-    ];
-
-    const scrollToSection = (id: string) => {
-        setActiveSection(id);
-        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-    };
-
-    useEffect(() => {
-        if (!hasAccess || !publicKeyStr) return;
-        fetch(`/api/favorites?address=${encodeURIComponent(publicKeyStr)}`)
-            .then((r) => r.ok ? r.json() : [])
-            .then((list) => { if (mountedRef.current) setFavorites(Array.isArray(list) ? list : []); })
-            .catch(() => {});
-    }, [hasAccess, publicKeyStr]);
-
-    const toggleFavorite = async (path: string) => {
-        if (!publicKeyStr) return;
-        const isFav = favorites.includes(path);
-        try {
-            const res = await fetch('/api/favorites', {
-                method: isFav ? 'DELETE' : 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ address: publicKeyStr, path }),
-            });
-            if (res.ok) {
-                const list = await res.json();
-                setFavorites(Array.isArray(list) ? list : []);
-            }
-        } catch {
-            // ignore
-        }
-    };
-
-    useEffect(() => {
-        if (mode === 'content' && (!connected || !hasAccess || isBlocked) && !loading) {
-            router.replace('/');
-        }
-    }, [mode, connected, hasAccess, isBlocked, loading, router]);
-
-    // При доступе на главной — редирект на поддомен exclusive
+    // При доступе на главной — редирект на /projects
     useEffect(() => {
         if (mode === 'gate' && connected && hasAccess && !loading && !isBlocked && pathname === '/') {
-            if (typeof window !== 'undefined' && window.location.hostname !== 'exclusive.nextuplabel.online') {
-                window.location.href = 'https://exclusive.nextuplabel.online/';
-            } else {
-                router.replace('/exclusive');
-            }
+            router.replace('/projects');
         }
     }, [mode, connected, hasAccess, isBlocked, loading, pathname, router]);
 
-    useEffect(() => {
-        if (!connected || !hasAccess) return;
-        const ids = ['projects', 'favorites', 'about', 'contact'];
-        const handleScroll = () => {
-            const scrollY = window.scrollY + 150;
-            for (let i = ids.length - 1; i >= 0; i--) {
-                const el = document.getElementById(ids[i]);
-                if (el) {
-                    const rect = el.getBoundingClientRect();
-                    if (rect.top + window.scrollY <= scrollY) {
-                        setActiveSection(ids[i]);
-                        break;
-                    }
-                }
-            }
-        };
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, [connected, hasAccess]);
-
     const showGate = mode === 'gate' && (!connected || loading || !hasAccess || isBlocked);
-    const showContent = mode === 'content' && connected && hasAccess && !loading && !isBlocked;
 
     return (
         <div className="min-h-screen">
@@ -389,7 +255,7 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                                 </div>
                             ) : (
                                 <Link
-                                    href="/exclusive"
+                                    href="/projects"
                                     className="flex items-center justify-center gap-3 w-full px-8 py-4 bg-[var(--foreground)] text-[var(--background)] font-semibold rounded-xl hover:opacity-90 transition-opacity"
                                 >
                                     Вход
@@ -512,203 +378,6 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                             </p>
                         )}
                     </footer>
-                </main>
-            )}
-
-            {/* Content Screen — только на /exclusive, на главной редирект */}
-            {showContent && (
-                <main className="min-h-screen flex">
-                    {/* Left sidebar navigation — как на Framer */}
-                    <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-48 lg:w-56 xl:w-64 border-r border-[var(--border)] bg-[var(--background)] z-20">
-                        <div className="p-6 pb-4">
-                            <Link href="/" className="font-display text-sm font-semibold text-[var(--foreground)] tracking-tight">ARTIST</Link>
-                        </div>
-                        <nav className="flex-1 px-6 py-4 space-y-1">
-                            {navItems.map((item) => (
-                                <button
-                                    key={item.id}
-                                    type="button"
-                                    onClick={() => scrollToSection(item.id)}
-                                    className={`block w-full text-left text-sm py-2 px-3 rounded-lg transition-colors ${
-                                        activeSection === item.id
-                                            ? 'text-[var(--foreground)] font-medium bg-[var(--bg-elevated)]'
-                                            : 'text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--bg-secondary)]'
-                                    }`}
-                                >
-                                    {item.label}
-                                </button>
-                            ))}
-                        </nav>
-                        <div className="p-6 pt-4 border-t border-[var(--border)] space-y-3">
-                            <div className="flex items-center gap-2">
-                                <ThemeToggle />
-                                <span className="text-xs text-[var(--text-muted)]">{shortenAddress(publicKey?.toString() || '')}</span>
-                            </div>
-                            {isAdmin(publicKey?.toString()) && (
-                                <a href="/admin" className="block text-xs text-[var(--text-muted)] hover:text-[var(--foreground)]">
-                                    Админ
-                                </a>
-                            )}
-                            <span className="text-xs text-[var(--text-muted)]">
-                                {Math.floor(tokenBalance || 0).toLocaleString()} токенов
-                            </span>
-                            {usePhantomMobileConnection ? (
-                                <button type="button" onClick={phantomDisconnect} className="text-xs text-[var(--text-muted)] hover:text-[var(--foreground)]">
-                                    Отключить
-                                </button>
-                            ) : (
-                                <WalletMultiButton className="!rounded-lg !py-2 !text-xs !block" />
-                            )}
-                        </div>
-                    </aside>
-
-                    {/* Mobile top bar */}
-                    <div className="lg:hidden fixed top-0 left-0 right-0 z-20 bg-[var(--background)] border-b border-[var(--border)] px-4 py-3 flex items-center justify-between">
-                        <Link href="/" className="font-display text-sm font-semibold">ARTIST</Link>
-                        <div className="flex items-center gap-3">
-                            <nav className="flex gap-2">
-                                {navItems.map((item) => (
-                                    <button
-                                        key={item.id}
-                                        type="button"
-                                        onClick={() => scrollToSection(item.id)}
-                                        className={`text-xs px-2 py-1 rounded ${activeSection === item.id ? 'bg-[var(--bg-elevated)] font-medium' : 'text-[var(--text-muted)]'}`}
-                                    >
-                                        {item.label}
-                                    </button>
-                                ))}
-                            </nav>
-                            <ThemeToggle />
-                            <WalletMultiButton className="!rounded-lg !py-1.5 !text-xs" />
-                        </div>
-                    </div>
-
-                    {/* Main content — scrollable */}
-                    <div className="content-area-bg flex-1 lg:pl-48 xl:pl-64 min-h-screen pt-16 lg:pt-0">
-                        <ContentBackground />
-                        <section id="projects" className="min-h-screen px-6 py-16 lg:py-24">
-                            <h1 className="font-display text-[clamp(1.75rem,3vw,2.25rem)] font-semibold text-[var(--foreground)] mb-2">
-                                Проекты
-                            </h1>
-                            <p className="text-[var(--text-secondary)] mb-12">Эксклюзивный контент для держателей токенов</p>
-
-                        <div className="p-8 bg-[var(--bg-card)]/60 backdrop-blur-xl border border-[var(--border)]/60 rounded-lg">
-                            {uploadedFiles.length > 0 ? (
-                                <div className="space-y-10">
-                                    {uploadedFiles.filter(isTrack).length > 0 && (
-                                        <div>
-                                            <div className="flex items-center justify-between gap-4 mb-4">
-                                                <h2 className="text-lg font-medium text-[var(--foreground)]">Треки</h2>
-                                                <div className="flex items-center gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => { if (isMuted) { if (volume === 0) setVolume(0.5); setIsMuted(false); } else setIsMuted(true); }}
-                                                        className="p-1.5 text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors rounded"
-                                                        aria-label={isMuted ? 'Включить звук' : 'Выключить звук'}
-                                                    >
-                                                        {isMuted || volume === 0 ? (
-                                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
-                                                        ) : volume < 0.5 ? (
-                                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/></svg>
-                                                        ) : (
-                                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-                                                        )}
-                                                    </button>
-                                                    <input type="range" min={0} max={1} step={0.01} value={volume} onChange={(e) => { const v = parseFloat(e.target.value); setVolume(v); setIsMuted(v === 0); }} className="audio-progress cursor-pointer w-24" />
-                                                </div>
-                                            </div>
-                                            <div className="grid gap-3">
-                                                {uploadedFiles.filter(isTrack).map((f) =>
-                                                    fileAccess[f.path] ? (
-                                                        <AudioPlayer key={f.id} id={f.id} path={f.path} token={fileAccess[f.path].token} address={fileAccess[f.path].address} name={f.name} coverPath={f.coverPath} playingId={playingId} onPlay={setPlayingId} volume={volume} isMuted={isMuted} isFavorite={favorites.includes(f.path)} onToggleFavorite={() => toggleFavorite(f.path)} />
-                                                    ) : (
-                                                        <div key={f.id} className="flex items-center gap-4 p-4 bg-[var(--bg-secondary)]/60 backdrop-blur-md rounded-lg animate-pulse">
-                                                            <div className="w-10 h-10 rounded bg-[var(--border)]" />
-                                                            <div><p className="text-sm font-medium truncate">{f.name}</p><p className="text-xs text-[var(--text-muted)]">Загрузка...</p></div>
-                                                        </div>
-                                                    )
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-                                    {uploadedFiles.filter((f) => !isTrack(f)).length > 0 && (
-                                        <div>
-                                            <h2 className="text-lg font-medium text-[var(--foreground)] mb-4">Другие файлы</h2>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                {uploadedFiles.filter((f) => !isTrack(f)).map((f) => (
-                                                    <div key={f.id} className="relative group/card">
-                                                        <SecureFileLink path={f.path} access={fileAccess[f.path]} name={f.name} size={f.size} />
-                                                        <div className="absolute top-2 right-2 z-10 opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100 transition-opacity">
-                                                            <FavoriteButton isFavorite={favorites.includes(f.path)} onToggle={() => toggleFavorite(f.path)} />
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <p className="text-[var(--text-secondary)]">Контент появится здесь. Админ загружает файлы в панели управления.</p>
-                            )}
-                        </div>
-                        </section>
-
-                        <section id="favorites" className="min-h-screen px-6 py-16 lg:py-24 border-t border-[var(--border)]">
-                            <h1 className="font-display text-[clamp(1.75rem,3vw,2.25rem)] font-semibold text-[var(--foreground)] mb-2">
-                                Избранное
-                            </h1>
-                            <p className="text-[var(--text-secondary)] mb-12">Контент, добавленный в избранное</p>
-                            <div className="p-8 bg-[var(--bg-card)]/60 backdrop-blur-xl border border-[var(--border)]/60 rounded-lg">
-                                {favorites.length === 0 ? (
-                                    <p className="text-[var(--text-secondary)]">Добавьте контент в избранное, нажав на сердечко при наведении</p>
-                                ) : (
-                                    <div className="space-y-10">
-                                        {uploadedFiles.filter(isTrack).filter((f) => favorites.includes(f.path)).length > 0 && (
-                                            <div>
-                                                <h2 className="text-lg font-medium text-[var(--foreground)] mb-4">Треки</h2>
-                                                <div className="grid gap-3">
-                                                    {uploadedFiles.filter(isTrack).filter((f) => favorites.includes(f.path)).map((f) =>
-                                                        fileAccess[f.path] ? (
-                                                            <AudioPlayer key={f.id} id={f.id} path={f.path} token={fileAccess[f.path].token} address={fileAccess[f.path].address} name={f.name} coverPath={f.coverPath} playingId={playingId} onPlay={setPlayingId} volume={volume} isMuted={isMuted} isFavorite={true} onToggleFavorite={() => toggleFavorite(f.path)} />
-                                                        ) : null
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-                                        {uploadedFiles.filter((f) => !isTrack(f)).filter((f) => favorites.includes(f.path)).length > 0 && (
-                                            <div>
-                                                <h2 className="text-lg font-medium text-[var(--foreground)] mb-4">Другие файлы</h2>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                    {uploadedFiles.filter((f) => !isTrack(f)).filter((f) => favorites.includes(f.path)).map((f) => (
-                                                        <div key={f.id} className="relative group/card">
-                                                            <SecureFileLink path={f.path} access={fileAccess[f.path]} name={f.name} size={f.size} />
-                                                            <div className="absolute top-2 right-2 z-10">
-                                                                <FavoriteButton isFavorite={true} onToggle={() => toggleFavorite(f.path)} />
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </section>
-
-                        <section id="about" className="min-h-screen px-6 py-16 lg:py-24 border-t border-[var(--border)]">
-                            <h2 className="font-display text-2xl font-semibold text-[var(--foreground)] mb-4">О нас</h2>
-                            <p className="text-[var(--text-secondary)] max-w-[600px] leading-relaxed">
-                                Эксклюзивное сообщество для держателей токенов артиста. Ранний доступ к релизам, закрытые материалы и личное сообщество.
-                            </p>
-                        </section>
-
-                        <section id="contact" className="min-h-screen px-6 py-16 lg:py-24 border-t border-[var(--border)]">
-                            <h2 className="font-display text-2xl font-semibold text-[var(--foreground)] mb-4">Контакты</h2>
-                            <p className="text-[var(--text-secondary)] max-w-[600px] leading-relaxed">
-                                Свяжитесь с нами через сообщество или официальные каналы артиста.
-                            </p>
-                        </section>
-                    </div>
                 </main>
             )}
         </div>

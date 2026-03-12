@@ -9,7 +9,7 @@
 3. Домен `nextuplabel.online` добавьте в настройках проекта
 4. Деплой происходит автоматически при каждом push
 
-Все маршруты (`/`, `/admin`, `/exclusive`, `/exclusive/projects` и т.д.) будут работать.
+Все маршруты (`/`, `/projects`, `/favorite`, `/about`, `/contacts`, `/admin`) будут работать.
 
 ---
 
@@ -92,25 +92,6 @@ npm ci --omit=dev
 npm run build
 pm2 restart my-token-site
 ```
-
----
-
-## Поддомен exclusive.nextuplabel.online
-
-Поддомен ведёт на страницу эксклюзивного контента:
-
-1. **DNS** — добавьте A-запись:
-   - Имя: `exclusive`
-   - Значение: IP вашего сервера (тот же, что у nextuplabel.online)
-
-2. **Nginx** — уже включён в `nginx.conf.example` (server_name)
-
-3. **SSL** — Certbot автоматически добавит поддомен в сертификат:
-   ```bash
-   sudo certbot --nginx -d nextuplabel.online -d www.nextuplabel.online -d exclusive.nextuplabel.online
-   ```
-
-При переходе на `exclusive.nextuplabel.online` пользователь автоматически перенаправляется на `/exclusive`.
 
 ---
 
