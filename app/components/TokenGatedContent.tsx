@@ -130,7 +130,7 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
     // При доступе на главной — редирект на /projects
     useEffect(() => {
         if (mode === 'gate' && connected && hasAccess && !loading && !isBlocked && pathname === '/') {
-            router.replace('/projects');
+            router.replace('/exclusive');
         }
     }, [mode, connected, hasAccess, isBlocked, loading, pathname, router]);
 
@@ -257,7 +257,7 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                                 </div>
                             ) : (
                                 <Link
-                                    href="/projects"
+                                    href="/exclusive"
                                     className="flex items-center justify-center gap-3 w-full px-8 py-4 bg-[var(--foreground)] text-[var(--background)] font-semibold rounded-xl hover:opacity-90 transition-opacity"
                                 >
                                     Вход
