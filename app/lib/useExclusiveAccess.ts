@@ -70,6 +70,7 @@ export function useExclusiveAccess() {
         setIsBlocked(false);
         return;
       }
+      setLoading(true);
       const fromAuth = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('phantom_connected') === '1';
       const delay = fromAuth ? 1500 : 0;
       const t = setTimeout(() => {
@@ -84,6 +85,7 @@ export function useExclusiveAccess() {
     } else {
       setTokenBalance(null);
       setHasAccess(false);
+      setLoading(false);
       setIsBlocked(false);
     }
   }, [connected, publicKeyStr]);
