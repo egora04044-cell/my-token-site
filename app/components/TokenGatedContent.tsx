@@ -2,7 +2,6 @@
 
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { isAdmin } from '@/lib/admin';
@@ -16,8 +15,6 @@ const REQUIRED_AMOUNT = 1000;
 type PageMode = 'gate' | 'content';
 
 export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }) {
-    const router = useRouter();
-    const pathname = usePathname();
     const { publicKey: adapterPublicKey, connected: adapterConnected } = useWallet();
     const { connected: phantomConnected, publicKey: phantomPublicKey, connectPhantom, connectWithGoogle, connectWithApple, disconnect: phantomDisconnect, hasDeeplinkSupport, isPhantomInAppBrowser } = usePhantomMobile();
 
@@ -126,13 +123,6 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
         window.addEventListener('resize', check);
         return () => window.removeEventListener('resize', check);
     }, []);
-
-    // При доступе на главной — редирект на /projects
-    useEffect(() => {
-        if (mode === 'gate' && connected && hasAccess && !loading && !isBlocked && pathname === '/') {
-            router.replace('/exclusive');
-        }
-    }, [mode, connected, hasAccess, isBlocked, loading, pathname, router]);
 
     const showGate = mode === 'gate' && (!connected || loading || !hasAccess || isBlocked);
 
