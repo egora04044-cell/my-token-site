@@ -8,7 +8,7 @@ const dmSans = DM_Sans({ weight: ['400', '500', '600', '700'], subsets: ['latin'
 const spaceGrotesk = Space_Grotesk({ weight: ['400', '500', '600', '700'], subsets: ['latin'], variable: '--font-display' })
 
 export const metadata: Metadata = {
-  title: 'Exclusive Access | VIRAL Token Gate',
+  title: 'Exclusive Access | Artist Token Gate',
   description: 'Эксклюзивный контент для держателей токенов артиста',
   robots: 'noindex, nofollow',
 }

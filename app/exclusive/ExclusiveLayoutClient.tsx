@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useExclusiveAccess } from '@/app/lib/useExclusiveAccess';
 import { isAdmin } from '@/lib/admin';
 import ThemeToggle from '@/app/components/ThemeToggle';
@@ -86,8 +85,8 @@ export default function ExclusiveLayoutClient({
       <main className="min-h-screen flex">
         <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-48 lg:w-56 xl:w-64 border-r border-[var(--border)] bg-[var(--background)] z-20">
           <div className="p-6 pb-4">
-            <Link href="/" className="flex items-center">
-              <Image src="/viral-logo.svg" alt="VIRAL" width={120} height={42} className="h-10 w-auto " />
+            <Link href="/" className="font-display text-sm font-semibold text-[var(--foreground)] tracking-tight">
+              ARTIST
             </Link>
             {pathname === '/exclusive' && (
               <a
@@ -149,8 +148,8 @@ export default function ExclusiveLayoutClient({
         </aside>
 
         <div className="lg:hidden fixed top-0 left-0 right-0 z-20 bg-[var(--background)] border-b border-[var(--border)] px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center">
-            <Image src="/viral-logo.svg" alt="VIRAL" width={120} height={42} className="h-9 w-auto " />
+          <Link href="/" className="font-display text-sm font-semibold">
+            ARTIST
           </Link>
           <div className="flex items-center gap-3">
             <ThemeToggle />
