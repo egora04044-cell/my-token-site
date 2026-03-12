@@ -90,7 +90,7 @@ git pull
 # или вручную:
 npm ci --omit=dev
 npm run build
-pm2 restart nextuplabel
+pm2 restart my-token-site
 ```
 
 ---

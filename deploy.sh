@@ -12,8 +12,8 @@ echo "=== Building ==="
 npm run build
 
 echo "=== Restarting PM2 ==="
-if pm2 describe nextuplabel > /dev/null 2>&1; then
-    pm2 restart nextuplabel
+if pm2 describe my-token-site > /dev/null 2>&1; then
+    pm2 restart my-token-site
 else
     pm2 start ecosystem.config.cjs
 fi
