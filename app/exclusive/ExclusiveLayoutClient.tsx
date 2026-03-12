@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useExclusiveAccess } from '@/app/lib/useExclusiveAccess';
@@ -39,9 +39,19 @@ export default function ExclusiveLayoutClient({
 
   const shortenAddress = (addr: string) => `${addr.slice(0, 4)}...${addr.slice(-4)}`;
 
-  // Не редиректить, пока кошелёк инициализируется (autoConnect) или проверяется баланс
+  // Не редиректить, пока кошелёк инициализируется или проверяется баланс
   const isInitializing = connecting || loading;
+  const hasCheckedRef = useRef(false);
+  const hadLoadingRef = useRef(false);
   useEffect(() => {
+    if (loading) hadLoadingRef.current = true;
+    else if (hadLoadingRef.current) {
+      hasCheckedRef.current = true;
+    }
+  }, [loading]);
+
+  useEffect(() => {
+    if (!hasCheckedRef.current) return;
     if ((!connected || !hasAccess || isBlocked) && !isInitializing) {
       router.replace('/');
     }
