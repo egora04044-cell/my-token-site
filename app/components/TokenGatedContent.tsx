@@ -246,12 +246,10 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                                     )}
                                 </div>
                             ) : (
-                                <Link
-                                    href="/exclusive"
-                                    className="flex items-center justify-center gap-3 w-full px-8 py-4 bg-[var(--foreground)] text-[var(--background)] font-semibold rounded-xl hover:opacity-90 transition-opacity"
-                                >
-                                    Вход
-                                </Link>
+                                <div className="p-8 text-center border border-[var(--border)] rounded-xl bg-[var(--bg-card)]/60 backdrop-blur-xl">
+                                    <p className="text-[var(--foreground)] font-medium">Доступ получен</p>
+                                    <p className="text-sm text-[var(--text-muted)] mt-2">Спасибо за поддержку</p>
+                                </div>
                             )}
                         </div>
                     </section>
