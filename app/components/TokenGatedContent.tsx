@@ -124,7 +124,7 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
         return () => window.removeEventListener('resize', check);
     }, []);
 
-    const showGate = mode === 'gate' && (!connected || loading || !hasAccess || isBlocked);
+    const showGate = mode === 'gate';
 
     return (
         <div className="min-h-screen">
