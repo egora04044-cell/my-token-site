@@ -134,7 +134,7 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                     <ContentBackground />
                     <nav className="w-full max-w-[1200px] mx-auto px-6 py-6 flex items-center justify-between opacity-0 animate-fade-in-up">
                         <Link href="/" className="flex items-center">
-                            <Image src="/0_3-8714b874-d448-4052-afb0-db79e77b2598.png" alt="VIRAL" width={240} height={134} className="h-20 w-auto rounded-xl" priority />
+                            <Image src="/Viral.svg" alt="VIRAL" width={240} height={134} className="h-20 w-auto rounded-xl" priority unoptimized />
                         </Link>
                         <div className="flex items-center gap-6">
                             <a href="#about" className="hidden sm:block text-sm text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors">

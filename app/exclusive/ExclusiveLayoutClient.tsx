@@ -96,7 +96,7 @@ export default function ExclusiveLayoutClient({
         <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-48 lg:w-56 xl:w-64 border-r border-[var(--border)] bg-[var(--background)] z-20">
           <div className="p-6 pb-4">
             <Link href="/" className="flex items-center">
-              <Image src="/0_3-8714b874-d448-4052-afb0-db79e77b2598.png" alt="VIRAL" width={120} height={67} className="h-16 w-auto rounded-xl" priority />
+              <Image src="/Viral.svg" alt="VIRAL" width={120} height={67} className="h-16 w-auto rounded-xl" priority unoptimized />
             </Link>
           </div>
           <nav className="flex-1 px-6 py-4 space-y-1">
@@ -146,7 +146,7 @@ export default function ExclusiveLayoutClient({
 
         <div className="lg:hidden fixed top-0 left-0 right-0 z-20 bg-[var(--background)] border-b border-[var(--border)] px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center">
-            <Image src="/0_3-8714b874-d448-4052-afb0-db79e77b2598.png" alt="VIRAL" width={120} height={67} className="h-16 w-auto rounded-xl" priority />
+            <Image src="/Viral.svg" alt="VIRAL" width={120} height={67} className="h-16 w-auto rounded-xl" priority unoptimized />
           </Link>
           <div className="flex items-center gap-3">
             <ThemeToggle />
