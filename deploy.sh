@@ -1,5 +1,5 @@
 #!/bin/bash
-# Deploy script for nextuplabel.online
+# Deploy script for viralviralviral.com
 # Run on the server: ./deploy.sh
 
 set -e

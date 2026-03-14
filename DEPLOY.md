@@ -36,17 +36,17 @@ sudo npm install -g pm2
 
 ```bash
 # Клонирование (если есть Git)
-git clone <ваш-репозиторий> /var/www/nextuplabel
-cd /var/www/nextuplabel
+git clone <ваш-репозиторий> /var/www/my-token-site
+cd /var/www/my-token-site
 
 # Или загрузка через scp/rsync с локальной машины:
-# rsync -avz --exclude node_modules --exclude .next ./ user@server:/var/www/nextuplabel/
+# rsync -avz --exclude node_modules --exclude .next ./ user@server:/var/www/my-token-site/
 ```
 
 ### Шаг 3: Первый деплой
 
 ```bash
-cd /var/www/nextuplabel
+cd /var/www/my-token-site
 
 # Установка зависимостей (production only)
 npm ci --omit=dev
@@ -80,7 +80,7 @@ sudo systemctl reload nginx
 ### Шаг 5: Обновление (после изменений в коде)
 
 ```bash
-cd /var/www/nextuplabel
+cd /var/www/my-token-site
 
 # Если используете Git
 git pull
