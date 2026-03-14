@@ -6,7 +6,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useExclusiveAccess } from '@/app/lib/useExclusiveAccess';
 import { isAdmin } from '@/lib/admin';
-import ThemeToggle from '@/app/components/ThemeToggle';
 import ContentBackground from '@/app/components/ContentBackground';
 import { ExclusiveProvider } from './ExclusiveProvider';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
@@ -117,7 +116,6 @@ export default function ExclusiveLayoutClient({
           </nav>
           <div className="p-6 pt-4 border-t border-[var(--border)] space-y-3">
             <div className="flex items-center gap-2">
-              <ThemeToggle />
               <span className="text-xs text-[var(--text-muted)]">
                 {shortenAddress(publicKey?.toString() || '')}
               </span>
@@ -149,7 +147,6 @@ export default function ExclusiveLayoutClient({
             <Image src="/Viral.svg" alt="VIRAL" width={120} height={67} className="h-16 w-auto rounded-xl" priority unoptimized />
           </Link>
           <div className="flex items-center gap-3">
-            <ThemeToggle />
             <WalletMultiButton className="!rounded-lg !py-1.5 !text-xs" />
           </div>
         </div>

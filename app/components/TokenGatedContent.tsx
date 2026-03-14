@@ -6,7 +6,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { isAdmin } from '@/lib/admin';
 import { usePhantomMobile } from '@/lib/phantom-mobile';
-import ThemeToggle from './ThemeToggle';
 import ContentBackground from './ContentBackground';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
@@ -148,7 +147,6 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                                     Админ
                                 </a>
                             )}
-                            <ThemeToggle />
                         </div>
                     </nav>
 
@@ -258,16 +256,16 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                         </div>
                     </section>
 
-                    <section className="px-6 py-8 border-t border-[var(--border)]/60">
-                        <div className="max-w-[1200px] mx-auto text-center">
+                    <section className="px-6 py-8">
+                        <div className="max-w-[1200px] mx-auto border-t border-[var(--border)]/80 pt-8 text-center">
                             <p className="text-xs text-[var(--text-muted)] uppercase tracking-widest">
                                 Phantom · Solana · {REQUIRED_AMOUNT}+ токенов
                             </p>
                         </div>
                     </section>
 
-                    <section className="px-6 py-16 lg:py-24">
-                        <div className="max-w-[1200px] mx-auto">
+                    <section className="px-6 pb-16 lg:pb-24">
+                        <div className="max-w-[1200px] mx-auto border-t border-[var(--border)]/80 pt-16 lg:pt-24">
                             <h2 className="font-display text-2xl lg:text-3xl font-semibold text-[var(--foreground)] text-center mb-12">
                                 Что внутри
                             </h2>
@@ -303,24 +301,27 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                         </div>
                     </section>
 
-                    <section id="about" className="px-6 py-16 lg:py-24 border-t border-[var(--border)]/60">
-                        <div className="max-w-[1200px] mx-auto">
+                    <section id="about" className="px-6 pb-16 lg:pb-24">
+                        <div className="max-w-[1200px] mx-auto border-t border-[var(--border)]/80 pt-16 lg:pt-24">
                             <h2 className="font-display text-2xl lg:text-3xl font-semibold text-[var(--foreground)] text-center mb-12">
                                 О проекте
                             </h2>
-                            <div className="max-w-[640px] mx-auto text-center">
-                                <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
-                                    Эксклюзивное сообщество для держателей токенов артиста. Ранний доступ к релизам, закрытые материалы и личное сообщество фанатов.
+                            <div className="max-w-[720px] mx-auto space-y-6 text-center">
+                                <p className="text-[var(--text-secondary)] leading-relaxed">
+                                    <strong className="text-[var(--foreground)]">VIRAL</strong> — это эксклюзивная платформа для держателей токенов артиста. Проект объединяет технологию блокчейна Solana и закрытый контент: владея токенами, вы получаете прямой доступ к материалам, которые недоступны широкой публике.
                                 </p>
                                 <p className="text-[var(--text-secondary)] leading-relaxed">
-                                    Поддерживайте артиста, владея токенами — и получайте доступ к контенту, который недоступен нигде больше.
+                                    Как это работает: подключите кошелёк Phantom с минимум 1000 токенами — и откроется доступ к разделу с неизданными треками, эксклюзивными видео, билетами и материалами сообщества. Всё хранится безопасно, вы полностью контролируете свои активы.
+                                </p>
+                                <p className="text-[var(--text-secondary)] leading-relaxed">
+                                    Поддерживая артиста через владение токенами, вы не только получаете привилегированный контент, но и становитесь частью закрытого сообщества фанатов с ранним доступом к релизам и прямым контактом с командой проекта.
                                 </p>
                             </div>
                         </div>
                     </section>
 
-                    <section id="ambassadors" className="px-6 py-16 lg:py-24 border-t border-[var(--border)]/60">
-                        <div className="max-w-[1200px] mx-auto">
+                    <section id="ambassadors" className="px-6 pb-16 lg:pb-24">
+                        <div className="max-w-[1200px] mx-auto border-t border-[var(--border)]/80 pt-16 lg:pt-24">
                             <h2 className="font-display text-2xl lg:text-3xl font-semibold text-[var(--foreground)] text-center mb-12">
                                 Амбассадоры
                             </h2>
@@ -346,8 +347,8 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                         </div>
                     </section>
 
-                    <section className="px-6 py-16 lg:py-20 border-t border-[var(--border)]/60">
-                        <div className="max-w-[1200px] mx-auto text-center">
+                    <section className="px-6 pb-16 lg:pb-20">
+                        <div className="max-w-[1200px] mx-auto border-t border-[var(--border)]/80 pt-16 lg:pt-20 text-center">
                             <h2 className="font-display text-xl lg:text-2xl font-semibold text-[var(--foreground)] mb-4">
                                 Готовы начать?
                             </h2>
@@ -362,15 +363,47 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                         </div>
                     </section>
 
-                    <footer className="py-12 flex flex-col items-center gap-4 border-t border-[var(--border)]/60">
-                        <a href="https://phantom.app" target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors">
-                            Скачать Phantom
-                        </a>
-                        {typeof window !== 'undefined' && /localhost|127\.0\.0\.1/.test(window.location.hostname) && (
-                            <p className="text-xs text-[var(--text-muted)]/70">
-                                Локалка: <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded">?dev_access=1</code>
-                            </p>
-                        )}
+                    <footer className="pb-16 lg:pb-20 bg-[linear-gradient(to_bottom,transparent_0%,rgba(0,0,0,0.4)_12%,rgba(0,0,0,0.6)_100%)] backdrop-blur-md">
+                        <div className="max-w-[1200px] mx-auto px-6 border-t border-[var(--border)]/80 pt-16 lg:pt-20">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
+                                <div>
+                                    <h3 className="font-display text-sm font-semibold text-[var(--foreground)] uppercase tracking-wider mb-4">О проекте</h3>
+                                    <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                                        VIRAL — платформа для держателей токенов на Solana. Подключите Phantom с 1000+ токенами и получите доступ к неизданным трекам, эксклюзивным материалам и закрытому сообществу.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="font-display text-sm font-semibold text-[var(--foreground)] uppercase tracking-wider mb-4">Контакты</h3>
+                                    <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
+                                        <li><a href="mailto:info@nextuplabel.online" className="hover:text-[var(--foreground)] transition-colors">info@nextuplabel.online</a></li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h3 className="font-display text-sm font-semibold text-[var(--foreground)] uppercase tracking-wider mb-4">Ссылки</h3>
+                                    <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
+                                        <li><a href="#about" className="hover:text-[var(--foreground)] transition-colors">О проекте</a></li>
+                                        <li><a href="#ambassadors" className="hover:text-[var(--foreground)] transition-colors">Амбассадоры</a></li>
+                                        <li><a href="https://phantom.app" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--foreground)] transition-colors">Скачать Phantom</a></li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h3 className="font-display text-sm font-semibold text-[var(--foreground)] uppercase tracking-wider mb-4">Технологии</h3>
+                                    <p className="text-sm text-[var(--text-muted)]">
+                                        Phantom · Solana · {REQUIRED_AMOUNT}+ токенов
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="mt-12 pt-8 border-t border-[var(--border)]/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <p className="text-xs text-[var(--text-muted)]">
+                                    © {new Date().getFullYear()} VIRAL. Все права защищены.
+                                </p>
+                                {typeof window !== 'undefined' && /localhost|127\.0\.0\.1/.test(window.location.hostname) && (
+                                    <p className="text-xs text-[var(--text-muted)]/70">
+                                        Локалка: <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded">?dev_access=1</code>
+                                    </p>
+                                )}
+                            </div>
+                        </div>
                     </footer>
                 </main>
             )}

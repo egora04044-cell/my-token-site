@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { Providers } from '../providers';
 import { PhantomMobileProvider } from '@/lib/phantom-mobile';
-import { ThemeProvider } from '@/lib/theme-context';
 
 /** Рендерит провайдеры только на клиенте после монтирования — устраняет React error #418 (hydration mismatch) */
 export function ClientOnlyProviders({ children }: { children: React.ReactNode }) {
@@ -22,12 +21,10 @@ export function ClientOnlyProviders({ children }: { children: React.ReactNode })
   }
 
   return (
-    <ThemeProvider>
-      <Providers>
-        <PhantomMobileProvider>
-          {children}
-        </PhantomMobileProvider>
-      </Providers>
-    </ThemeProvider>
+    <Providers>
+      <PhantomMobileProvider>
+        {children}
+      </PhantomMobileProvider>
+    </Providers>
   );
 }

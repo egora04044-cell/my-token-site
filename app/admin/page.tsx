@@ -8,7 +8,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ADMIN_ADDRESSES, isAdmin } from '@/lib/admin';
 import GlassBlock from '@/app/components/GlassBlock';
-import ThemeToggle from '@/app/components/ThemeToggle';
 
 interface ConnectedAddress {
   address: string;
@@ -292,7 +291,6 @@ export default function AdminPage() {
           <h1 className="font-display text-2xl font-semibold">Админ-панель</h1>
         </div>
         <div className="flex items-center gap-3">
-          <ThemeToggle />
           <WalletMultiButton className="!rounded-lg !py-2 !text-sm" />
         </div>
       </header>

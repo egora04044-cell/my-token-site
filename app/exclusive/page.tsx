@@ -133,10 +133,15 @@ export default function ExclusivePage() {
       </section>
 
       <section id="about" className="min-h-screen px-6 py-16 lg:py-24 border-t border-[var(--border)]">
-        <h2 className="font-display text-2xl font-semibold text-[var(--foreground)] mb-4">О нас</h2>
-        <p className="text-[var(--text-secondary)] max-w-[600px] leading-relaxed">
-          Эксклюзивное сообщество для держателей токенов артиста. Ранний доступ к релизам, закрытые материалы и личное сообщество.
-        </p>
+        <h2 className="font-display text-2xl font-semibold text-[var(--foreground)] mb-6">О нас</h2>
+        <div className="max-w-[640px] space-y-4">
+          <p className="text-[var(--text-secondary)] leading-relaxed">
+            VIRAL — эксклюзивная платформа для держателей токенов артиста на блокчейне Solana. Владея токенами, вы получаете доступ к контенту, недоступному нигде больше: неизданные треки, эксклюзивные видео, билеты и материалы сообщества.
+          </p>
+          <p className="text-[var(--text-secondary)] leading-relaxed">
+            Подключив кошелёк Phantom с минимум 1000 токенами, вы становитесь частью закрытого сообщества с ранним доступом к релизам и прямым контактом с командой проекта.
+          </p>
+        </div>
       </section>
 
       <section id="contact" className="min-h-screen px-6 py-16 lg:py-24 border-t border-[var(--border)]">
