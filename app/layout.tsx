@@ -1,10 +1,9 @@
 import type { Metadata } from 'next'
-import { DM_Sans, Space_Grotesk } from 'next/font/google'
+import { IBM_Plex_Mono } from 'next/font/google'
 import './globals.css'
 import { ClientOnlyProviders } from './components/ClientOnlyProviders'
 
-const dmSans = DM_Sans({ weight: ['400', '500', '600', '700'], subsets: ['latin'], variable: '--font-body' })
-const spaceGrotesk = Space_Grotesk({ weight: ['400', '500', '600', '700'], subsets: ['latin'], variable: '--font-display' })
+const ibmPlexMono = IBM_Plex_Mono({ weight: ['400', '500', '600', '700'], subsets: ['latin', 'cyrillic'], variable: '--font-mono' })
 
 export const metadata: Metadata = {
   title: 'Exclusive Access | VIRAL Token Gate',
@@ -18,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ru" className={`${dmSans.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
+    <html lang="ru" className={ibmPlexMono.variable} suppressHydrationWarning>
       <body className="font-sans antialiased">
         <div className="noise-overlay" />
         <ClientOnlyProviders>{children}</ClientOnlyProviders>

@@ -5,6 +5,9 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useLanguage } from '@/lib/language-context';
+import { t } from '@/lib/translations';
+import LanguageSwitcher from '@/app/components/LanguageSwitcher';
 import Image from 'next/image';
 import { ADMIN_ADDRESSES, isAdmin } from '@/lib/admin';
 import GlassBlock from '@/app/components/GlassBlock';
@@ -44,6 +47,7 @@ export default function AdminPage() {
   const coverInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const adminAddress = publicKey?.toString();
+  const { lang } = useLanguage();
   const [category, setCategory] = useState<'tracks' | 'videos' | 'community' | 'tickets' | 'other'>('tracks');
 
   const fetchData = async () => {
@@ -265,13 +269,13 @@ export default function AdminPage() {
           </Link>
         </header>
         <div className="max-w-md w-full text-center">
-          <h1 className="font-serif text-3xl mb-4">Панель администратора</h1>
+          <h1 className="font-serif text-3xl mb-4">{t(lang, 'adminTitle')}</h1>
           <p className="text-[var(--text-secondary)] mb-8">
-            Подключите Phantom кошелёк с правами администратора
+            {t(lang, 'adminConnect')}
           </p>
           <WalletMultiButton className="!rounded-xl !mx-auto" />
           <Link href="/" className="block mt-8 text-sm text-[var(--text-muted)] hover:text-[var(--accent)]">
-            ← На главную
+            {t(lang, 'backHome')}
           </Link>
         </div>
       </div>
@@ -286,11 +290,12 @@ export default function AdminPage() {
             <Image src="/Viral.svg" alt="VIRAL" width={120} height={67} className="h-16 w-auto rounded-xl" priority unoptimized />
           </Link>
           <Link href="/" className="text-[var(--text-muted)] hover:text-[var(--foreground)] text-sm">
-            ← Главная
+            {t(lang, 'backHome')}
           </Link>
-          <h1 className="font-display text-2xl font-semibold">Админ-панель</h1>
+          <h1 className="font-display text-2xl font-semibold">{t(lang, 'adminTitle')}</h1>
         </div>
         <div className="flex items-center gap-3">
+          <LanguageSwitcher />
           <WalletMultiButton className="!rounded-lg !py-2 !text-sm" />
         </div>
       </header>

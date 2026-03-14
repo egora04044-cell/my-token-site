@@ -5,16 +5,19 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useExclusiveAccess } from '@/app/lib/useExclusiveAccess';
+import { useLanguage } from '@/lib/language-context';
+import { t } from '@/lib/translations';
+import LanguageSwitcher from '@/app/components/LanguageSwitcher';
 import { isAdmin } from '@/lib/admin';
 import ContentBackground from '@/app/components/ContentBackground';
 import { ExclusiveProvider } from './ExclusiveProvider';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 const navItems = [
-  { id: 'projects', label: 'Проекты' },
-  { id: 'favorites', label: 'Избранное' },
-  { id: 'about', label: 'О нас' },
-  { id: 'contact', label: 'Контакты' },
+  { id: 'projects', labelKey: 'projects' },
+  { id: 'favorites', labelKey: 'favoritesSection' },
+  { id: 'about', labelKey: 'aboutUs' },
+  { id: 'contact', labelKey: 'contact' },
 ];
 
 export default function ExclusiveLayoutClient({
@@ -36,6 +39,7 @@ export default function ExclusiveLayoutClient({
     usePhantomMobileConnection,
     phantomDisconnect,
   } = useExclusiveAccess();
+  const { lang } = useLanguage();
 
   const shortenAddress = (addr: string) => `${addr.slice(0, 4)}...${addr.slice(-4)}`;
 
@@ -84,7 +88,7 @@ export default function ExclusiveLayoutClient({
   if (!connected || !hasAccess || isInitializing || isBlocked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
-        <div className="animate-pulse text-[var(--text-muted)]">Загрузка...</div>
+        <div className="animate-pulse text-[var(--text-muted)] font-mono text-sm">{t(lang, 'loading')}</div>
       </div>
     );
   }
@@ -110,19 +114,20 @@ export default function ExclusiveLayoutClient({
                     : 'text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--bg-secondary)]'
                 }`}
               >
-                {item.label}
+                {t(lang, item.labelKey)}
               </button>
             ))}
           </nav>
           <div className="p-6 pt-4 border-t border-[var(--border)] space-y-3">
             <div className="flex items-center gap-2">
+              <LanguageSwitcher direction="up-right" />
               <span className="text-xs text-[var(--text-muted)]">
                 {shortenAddress(publicKey?.toString() || '')}
               </span>
             </div>
             {isAdmin(publicKey?.toString()) && (
               <Link href="/admin" className="block text-xs text-[var(--text-muted)] hover:text-[var(--foreground)]">
-                Админ
+                {t(lang, 'navAdmin')}
               </Link>
             )}
             <span className="text-xs text-[var(--text-muted)]">
@@ -147,11 +152,12 @@ export default function ExclusiveLayoutClient({
             <Image src="/Viral.svg" alt="VIRAL" width={120} height={67} className="h-16 w-auto rounded-xl" priority unoptimized />
           </Link>
           <div className="flex items-center gap-3">
+            <LanguageSwitcher direction="up-right" />
             <WalletMultiButton className="!rounded-lg !py-1.5 !text-xs" />
           </div>
         </div>
 
-        <div className="content-area-bg flex-1 lg:pl-48 xl:pl-64 min-h-screen pt-16 lg:pt-0">
+        <div className="content-area-bg flex-1 min-w-0 lg:pl-56 xl:pl-64 min-h-screen pt-16 lg:pt-0">
           <ContentBackground />
           <div className="lg:hidden px-4 py-3 flex gap-2 overflow-x-auto border-b border-[var(--border)]">
             {navItems.map((item) => (
@@ -163,7 +169,7 @@ export default function ExclusiveLayoutClient({
                   activeSection === item.id ? 'bg-[var(--bg-elevated)] font-medium' : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
                 }`}
               >
-                {item.label}
+                {t(lang, item.labelKey)}
               </button>
             ))}
           </div>
