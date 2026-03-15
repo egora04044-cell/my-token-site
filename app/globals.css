@@ -88,6 +88,51 @@ a[href]:active,
   border-radius: 12px !important;
 }
 
+/* Плавное открытие выбора языка */
+@keyframes dropdown-fade-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes dropdown-fade-in-up {
+  from { opacity: 0; transform: scale(0.96) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.language-dropdown-enter {
+  animation: dropdown-fade-in 0.2s ease-out forwards;
+}
+.language-dropdown-enter-up {
+  animation: dropdown-fade-in-up 0.2s ease-out forwards;
+}
+.language-overlay-enter {
+  animation: fade-in 0.15s ease-out forwards;
+}
+.language-overlay-exit {
+  animation: fade-out 0.2s ease-out forwards;
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+/* Плавное закрытие выпадающего списка */
+@keyframes dropdown-fade-out {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 0; transform: scale(0.96) translateY(-4px); }
+}
+@keyframes dropdown-fade-out-up {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 0; transform: scale(0.96) translateY(4px); }
+}
+.language-dropdown-exit {
+  animation: dropdown-fade-out 0.2s ease-out forwards;
+}
+.language-dropdown-exit-up {
+  animation: dropdown-fade-out-up 0.2s ease-out forwards;
+}
+
 /* Выпадающее меню кошелька открывается вверх */
 .wallet-adapter-dropdown-list {
   top: auto !important;
@@ -390,6 +435,15 @@ input[type="range"].audio-progress::-moz-range-thumb {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .language-dropdown-enter,
+  .language-dropdown-enter-up,
+  .language-dropdown-exit,
+  .language-dropdown-exit-up,
+  .language-overlay-enter,
+  .language-overlay-exit {
+    animation: none;
+    opacity: 1;
+  }
   .content-area-bg .orb {
     animation: none;
   }
