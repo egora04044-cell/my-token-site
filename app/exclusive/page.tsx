@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useExclusiveData } from './ExclusiveProvider';
 import { useLanguage } from '@/lib/language-context';
 import { t } from '@/lib/translations';
+import { CONTACT_EMAIL } from '@/lib/site-url';
 import AudioPlayer from '@/app/components/AudioPlayer';
 import SecureFileLink from '@/app/components/SecureFileLink';
 import FavoriteButton from '@/app/components/FavoriteButton';
@@ -78,7 +79,7 @@ export default function ExclusivePage() {
                   <h2 className="text-lg font-medium text-[var(--foreground)] mb-4">{t(lang, 'otherFiles')}</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {uploadedFiles.filter((f) => !isTrack(f)).map((f) => (
-                      <div key={f.id} className="relative group/card">
+                      <div key={f.id} className="relative group/card animate-card-hover rounded-lg overflow-hidden">
                         <SecureFileLink path={f.path} access={fileAccess[f.path]} name={f.name} size={f.size} />
                         <div className="absolute top-2 right-2 z-10 opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100 transition-opacity">
                           <FavoriteButton isFavorite={favorites.includes(f.path)} onToggle={() => toggleFavorite(f.path)} />
@@ -120,7 +121,7 @@ export default function ExclusivePage() {
                   <h2 className="text-lg font-medium text-[var(--foreground)] mb-4">{t(lang, 'otherFiles')}</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {uploadedFiles.filter((f) => !isTrack(f)).filter((f) => favorites.includes(f.path)).map((f) => (
-                      <div key={f.id} className="relative group/card">
+                      <div key={f.id} className="relative group/card animate-card-hover rounded-lg overflow-hidden">
                         <SecureFileLink path={f.path} access={fileAccess[f.path]} name={f.name} size={f.size} />
                         <div className="absolute top-2 right-2 z-10">
                           <FavoriteButton isFavorite={true} onToggle={() => toggleFavorite(f.path)} />
@@ -166,7 +167,7 @@ export default function ExclusivePage() {
             <div>
               <h3 className="font-display text-sm font-semibold text-[var(--foreground)] uppercase tracking-wider mb-4">{t(lang, 'footerContacts')}</h3>
               <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
-                <li><a href="mailto:info@nextuplabel.online" className="hover:text-[var(--foreground)] transition-colors">info@nextuplabel.online</a></li>
+                <li><a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-[var(--foreground)] transition-colors">{CONTACT_EMAIL}</a></li>
               </ul>
             </div>
             <div>

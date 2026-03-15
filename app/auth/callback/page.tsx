@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { BrowserSDK, AddressType } from '@phantom/browser-sdk';
 
 const PHANTOM_APP_ID = process.env.NEXT_PUBLIC_PHANTOM_APP_ID || '';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nextuplabel.online';
 
 function AuthCallbackContent() {
   const searchParams = useSearchParams();
@@ -36,7 +37,7 @@ function AuthCallbackContent() {
       addressTypes: [AddressType.solana],
       appId: PHANTOM_APP_ID,
       authOptions: {
-        redirectUrl: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : 'https://nextuplabel.online/auth/callback',
+        redirectUrl: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : `${SITE_URL}/auth/callback`,
       },
       autoConnect: true,
     });

@@ -10,6 +10,7 @@ import { useLanguage } from '@/lib/language-context';
 import { t } from '@/lib/translations';
 import ContentBackground from './ContentBackground';
 import LanguageSwitcher from './LanguageSwitcher';
+import { SITE_URL, CONTACT_EMAIL } from '@/lib/site-url';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 const REQUIRED_AMOUNT = 1000;
@@ -126,6 +127,19 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
         return () => window.removeEventListener('resize', check);
     }, []);
 
+    const whatInsideRef = useRef<HTMLElement>(null);
+    const [whatInsideVisible, setWhatInsideVisible] = useState(false);
+    useEffect(() => {
+        const el = whatInsideRef.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(
+            ([e]) => { if (e.isIntersecting) setWhatInsideVisible(true); },
+            { threshold: 0.2, rootMargin: '0px 0px -50px 0px' }
+        );
+        obs.observe(el);
+        return () => obs.disconnect();
+    }, []);
+
     const showGate = mode === 'gate';
     const { lang } = useLanguage();
 
@@ -162,7 +176,7 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                                     {t(lang, 'openSafariHint')}
                                 </p>
                                 <a
-                                    href="x-safari-https://nextuplabel.online"
+                                    href={`x-safari-${SITE_URL}`}
                                     className="inline-block px-6 py-3 bg-[var(--foreground)] text-[var(--background)] font-medium rounded-xl hover:opacity-90 transition-opacity"
                                 >
                                     {t(lang, 'openInSafari')}
@@ -268,13 +282,17 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                         </div>
                     </section>
 
-                    <section className="px-6 pb-16 lg:pb-24">
+                    <section ref={whatInsideRef} className="px-6 pb-16 lg:pb-24">
                         <div className="max-w-[1200px] mx-auto border-t border-[var(--border)]/80 pt-16 lg:pt-24">
                             <h2 className="font-display text-2xl lg:text-3xl font-semibold text-[var(--foreground)] text-center mb-12">
                                 {t(lang, 'whatInside')}
                             </h2>
-                            <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
-                                <div className="p-6 lg:p-8 rounded-2xl bg-[var(--bg-card)]/60 backdrop-blur-xl border border-[var(--border)]/60 hover:border-[var(--border-hover)] transition-colors">
+                            <div className={`grid md:grid-cols-3 gap-6 lg:gap-8 what-inside-grid ${whatInsideVisible ? 'what-inside-visible' : ''}`}>
+                                <div
+                                    className="what-inside-card what-inside-card-left p-6 lg:p-8 rounded-2xl bg-[var(--bg-card)]/60 backdrop-blur-xl border border-[var(--border)]/60 hover:border-[var(--border-hover)]"
+                                    onMouseEnter={(e) => (e.currentTarget as HTMLElement).classList.add('what-inside-card-animating')}
+                                    onAnimationEnd={(e) => { if (e.animationName === 'sway-once') (e.currentTarget as HTMLElement).classList.remove('what-inside-card-animating'); }}
+                                >
                                     <div className="w-12 h-12 rounded-xl bg-[var(--bg-elevated)] flex items-center justify-center mb-4">
                                         <svg className="w-6 h-6 text-[var(--foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
                                     </div>
@@ -283,7 +301,11 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                                         {t(lang, 'earlyReleasesDesc')}
                                     </p>
                                 </div>
-                                <div className="p-6 lg:p-8 rounded-2xl bg-[var(--bg-card)]/60 backdrop-blur-xl border border-[var(--border)]/60 hover:border-[var(--border-hover)] transition-colors">
+                                <div
+                                    className="what-inside-card what-inside-card-center p-6 lg:p-8 rounded-2xl bg-[var(--bg-card)]/60 backdrop-blur-xl border border-[var(--border)]/60 hover:border-[var(--border-hover)]"
+                                    onMouseEnter={(e) => (e.currentTarget as HTMLElement).classList.add('what-inside-card-animating')}
+                                    onAnimationEnd={(e) => { if (e.animationName === 'sway-once-center') (e.currentTarget as HTMLElement).classList.remove('what-inside-card-animating'); }}
+                                >
                                     <div className="w-12 h-12 rounded-xl bg-[var(--bg-elevated)] flex items-center justify-center mb-4">
                                         <svg className="w-6 h-6 text-[var(--foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                                     </div>
@@ -292,7 +314,11 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                                         {t(lang, 'favoritesDesc')}
                                     </p>
                                 </div>
-                                <div className="p-6 lg:p-8 rounded-2xl bg-[var(--bg-card)]/60 backdrop-blur-xl border border-[var(--border)]/60 hover:border-[var(--border-hover)] transition-colors">
+                                <div
+                                    className="what-inside-card what-inside-card-right p-6 lg:p-8 rounded-2xl bg-[var(--bg-card)]/60 backdrop-blur-xl border border-[var(--border)]/60 hover:border-[var(--border-hover)]"
+                                    onMouseEnter={(e) => (e.currentTarget as HTMLElement).classList.add('what-inside-card-animating')}
+                                    onAnimationEnd={(e) => { if (e.animationName === 'sway-once') (e.currentTarget as HTMLElement).classList.remove('what-inside-card-animating'); }}
+                                >
                                     <div className="w-12 h-12 rounded-xl bg-[var(--bg-elevated)] flex items-center justify-center mb-4">
                                         <svg className="w-6 h-6 text-[var(--foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                                     </div>
@@ -310,15 +336,9 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                             <h2 className="font-display text-2xl lg:text-3xl font-semibold text-[var(--foreground)] text-center mb-12">
                                 {t(lang, 'aboutTitle')}
                             </h2>
-                            <div className="max-w-[720px] mx-auto space-y-6 text-center">
+                            <div className="max-w-[720px] mx-auto text-center">
                                 <p className="text-[var(--text-secondary)] leading-relaxed">
                                     {t(lang, 'aboutP1')}
-                                </p>
-                                <p className="text-[var(--text-secondary)] leading-relaxed">
-                                    {t(lang, 'aboutP2')}
-                                </p>
-                                <p className="text-[var(--text-secondary)] leading-relaxed">
-                                    {t(lang, 'aboutP3')}
                                 </p>
                             </div>
                         </div>
@@ -379,7 +399,7 @@ export default function TokenGatedContent({ mode = 'gate' }: { mode?: PageMode }
                                 <div>
                                     <h3 className="font-display text-sm font-semibold text-[var(--foreground)] uppercase tracking-wider mb-4">{t(lang, 'footerContacts')}</h3>
                                     <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
-                                        <li><a href="mailto:info@nextuplabel.online" className="hover:text-[var(--foreground)] transition-colors">info@nextuplabel.online</a></li>
+                                        <li><a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-[var(--foreground)] transition-colors">{CONTACT_EMAIL}</a></li>
                                     </ul>
                                 </div>
                                 <div>
